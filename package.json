@@ -1,15 +1,26 @@
 {
-  "name": "vim-workflow-tools",
-  "displayName": "Vim Workflow Tools",
-  "description": "A VS Code extension scaffold for building Vim-oriented workflow tools.",
-  "version": "0.0.1",
+  "name": "vimium-vscode",
+  "displayName": "Vimium for VS Code",
+  "description": "Keyboard-first editor and IDE navigation hints for VS Code, inspired by Vimium.",
+  "version": "0.2.0",
   "publisher": "mohsen",
   "license": "MIT",
   "engines": {
     "vscode": "^1.120.0"
   },
   "categories": [
+    "Keymaps",
     "Other"
+  ],
+  "keywords": [
+    "vim",
+    "vimium",
+    "keyboard",
+    "navigation",
+    "hints"
+  ],
+  "extensionKind": [
+    "ui"
   ],
   "files": [
     "dist/extension.js",
@@ -18,6 +29,45 @@
     "LICENSE"
   ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onCommand:vimiumCode.enterHintMode",
+    "onCommand:vimiumCode.openWorkbenchHints",
+    "onCommand:vimiumCode.typeHintCharacter",
+    "onCommand:vimiumCode.acceptHint",
+    "onCommand:vimiumCode.backspaceHint",
+    "onCommand:vimiumCode.cancelHint",
+    "onCommand:vimiumCode.scrollDown",
+    "onCommand:vimiumCode.scrollUp",
+    "onCommand:vimiumCode.pageDown",
+    "onCommand:vimiumCode.pageUp",
+    "onCommand:vimiumCode.goToTop",
+    "onCommand:vimiumCode.goToBottom",
+    "onCommand:vimiumCode.focusNextEditor",
+    "onCommand:vimiumCode.focusPreviousEditor",
+    "onCommand:vimiumCode.focusExplorer",
+    "onCommand:vimiumCode.focusSearch",
+    "onCommand:vimiumCode.focusSourceControl",
+    "onCommand:vimiumCode.focusRunAndDebug",
+    "onCommand:vimiumCode.focusExtensions",
+    "onCommand:vimiumCode.focusActivityBar",
+    "onCommand:vimiumCode.focusSideBar",
+    "onCommand:vimiumCode.focusFilesExplorer",
+    "onCommand:vimiumCode.revealActiveFileInExplorer",
+    "onCommand:vimiumCode.explorerNewFile",
+    "onCommand:vimiumCode.explorerNewFolder",
+    "onCommand:vimiumCode.explorerRefresh",
+    "onCommand:vimiumCode.explorerCollapseAll",
+    "onCommand:vimiumCode.listFocusUp",
+    "onCommand:vimiumCode.listFocusDown",
+    "onCommand:vimiumCode.listExpand",
+    "onCommand:vimiumCode.listCollapse",
+    "onCommand:vimiumCode.listSelect",
+    "onCommand:vimiumCode.focusPanel",
+    "onCommand:vimiumCode.focusStatusBar",
+    "onCommand:vimiumCode.toggleSideBar",
+    "onCommand:vimiumCode.togglePanel",
+    "onCommand:vimiumCode.toggleTerminal"
+  ],
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true
@@ -27,23 +77,638 @@
   "contributes": {
     "commands": [
       {
-        "command": "vimWorkflowTools.showEditingContext",
-        "title": "Show Editing Context",
-        "category": "Vim Workflow"
+        "command": "vimiumCode.enterHintMode",
+        "title": "Show Editor Navigation Hints",
+        "category": "Vimium"
       },
       {
-        "command": "vimWorkflowTools.openKeyboardShortcuts",
-        "title": "Open Keyboard Shortcuts JSON",
-        "category": "Vim Workflow"
+        "command": "vimiumCode.openWorkbenchHints",
+        "title": "Show IDE Navigation Hints",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "title": "Type Hint Character",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.acceptHint",
+        "title": "Accept Hint",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.backspaceHint",
+        "title": "Delete Hint Character",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.cancelHint",
+        "title": "Cancel Hint Mode",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.scrollDown",
+        "title": "Scroll Down",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.scrollUp",
+        "title": "Scroll Up",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.pageDown",
+        "title": "Page Down",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.pageUp",
+        "title": "Page Up",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.goToTop",
+        "title": "Go to Top",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.goToBottom",
+        "title": "Go to Bottom",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusNextEditor",
+        "title": "Focus Next Editor",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusPreviousEditor",
+        "title": "Focus Previous Editor",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusExplorer",
+        "title": "Focus Explorer",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusSearch",
+        "title": "Focus Search",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusSourceControl",
+        "title": "Focus Source Control",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusRunAndDebug",
+        "title": "Focus Run and Debug",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusExtensions",
+        "title": "Focus Extensions",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusActivityBar",
+        "title": "Focus Activity Bar",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusSideBar",
+        "title": "Focus Side Bar",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusFilesExplorer",
+        "title": "Focus Files Explorer",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.revealActiveFileInExplorer",
+        "title": "Reveal Active File in Explorer",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.explorerNewFile",
+        "title": "Explorer: New File",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.explorerNewFolder",
+        "title": "Explorer: New Folder",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.explorerRefresh",
+        "title": "Explorer: Refresh",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.explorerCollapseAll",
+        "title": "Explorer: Collapse All",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.listFocusUp",
+        "title": "List: Focus Previous Item",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.listFocusDown",
+        "title": "List: Focus Next Item",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.listExpand",
+        "title": "List: Expand Item",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.listCollapse",
+        "title": "List: Collapse Item",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.listSelect",
+        "title": "List: Select Item",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusPanel",
+        "title": "Focus Panel",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.focusStatusBar",
+        "title": "Focus Status Bar",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.toggleSideBar",
+        "title": "Toggle Side Bar",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.togglePanel",
+        "title": "Toggle Panel",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.toggleTerminal",
+        "title": "Toggle Terminal",
+        "category": "Vimium"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "vimiumCode.typeHintCharacter",
+          "when": "false"
+        },
+        {
+          "command": "vimiumCode.acceptHint",
+          "when": "false"
+        },
+        {
+          "command": "vimiumCode.backspaceHint",
+          "when": "false"
+        },
+        {
+          "command": "vimiumCode.cancelHint",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "vimiumCode.openWorkbenchHints",
+        "key": "f",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.enterHintMode",
+        "key": "f",
+        "when": "editorTextFocus && vim.mode == 'Normal' && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.enterHintMode",
+        "key": "alt+f",
+        "when": "editorTextFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.openWorkbenchHints",
+        "key": "shift+f",
+        "when": "!vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.cancelHint",
+        "key": "escape",
+        "when": "vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.acceptHint",
+        "key": "enter",
+        "when": "vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.backspaceHint",
+        "key": "backspace",
+        "when": "vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.scrollDown",
+        "key": "ctrl+d",
+        "when": "editorTextFocus && vim.mode == 'Normal' && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.scrollUp",
+        "key": "ctrl+u",
+        "when": "editorTextFocus && vim.mode == 'Normal' && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.listFocusDown",
+        "key": "j",
+        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.listFocusUp",
+        "key": "k",
+        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.listCollapse",
+        "key": "h",
+        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.listExpand",
+        "key": "l",
+        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.listSelect",
+        "key": "enter",
+        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.focusExplorer",
+        "key": "g e",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.focusSearch",
+        "key": "g s",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.focusSourceControl",
+        "key": "g c",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.focusRunAndDebug",
+        "key": "g r",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.focusExtensions",
+        "key": "g x",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.toggleTerminal",
+        "key": "g t",
+        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "a",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "a"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "b",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "b"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "c",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "c"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "d",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "d"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "e",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "e"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "f",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "f"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "g",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "g"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "h",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "h"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "i",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "i"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "j",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "j"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "k",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "k"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "l",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "l"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "m",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "m"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "n",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "n"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "o",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "o"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "p",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "p"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "q",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "q"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "r",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "r"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "s",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "s"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "t",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "t"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "u",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "u"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "v",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "v"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "w",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "w"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "x",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "x"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "y",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "y"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "z",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "z"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "0",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "0"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "1",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "1"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "2",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "2"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "3",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "3"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "4",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "4"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "5",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "5"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "6",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "6"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "7",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "7"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "8",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "8"
+        }
+      },
+      {
+        "command": "vimiumCode.typeHintCharacter",
+        "key": "9",
+        "when": "vimiumCode.hintMode",
+        "args": {
+          "character": "9"
+        }
       }
     ],
     "configuration": {
-      "title": "Vim Workflow Tools",
+      "title": "Vimium for VS Code",
       "properties": {
-        "vimWorkflowTools.showNotifications": {
+        "vimiumCode.hintCharacters": {
+          "type": "string",
+          "default": "asdfghjklqwertyuiopzxcvbnm",
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "Characters used to generate hint labels. Duplicate characters are ignored. Only letters and digits have default keybindings."
+        },
+        "vimiumCode.maxEditorHints": {
+          "type": "integer",
+          "default": 250,
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Maximum number of visible editor lines to label in one hint session."
+        },
+        "vimiumCode.includeBlankLines": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include blank visible editor lines as jump targets."
+        },
+        "vimiumCode.autoAcceptExactHint": {
           "type": "boolean",
           "default": true,
-          "description": "Show a notification after running user-invoked Vim Workflow commands."
+          "description": "Jump immediately after the typed hint exactly matches a target label."
+        },
+        "vimiumCode.preferWorkbenchDomOverlay": {
+          "type": "boolean",
+          "default": true,
+          "description": "Try experimental Vimium-style DOM labels over the VS Code workbench when VS Code is launched with the configured remote debugging port. Falls back to the supported IDE hint list when unavailable."
+        },
+        "vimiumCode.workbenchDomOverlayDebugPort": {
+          "type": "integer",
+          "default": 9333,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Local Chrome DevTools Protocol port used by experimental workbench DOM hints. Start VS Code with --remote-debugging-port=<port> to enable direct DOM overlays."
         }
       }
     }

@@ -1,13 +1,59 @@
-# Vim Workflow Tools
+# Vimium for VS Code
 
-This repository contains a TypeScript VS Code extension scaffold for building Vim-oriented workflow commands.
+Keyboard-first navigation for VS Code, inspired by Vimium. This extension adds visible hint labels in the active editor and a Vimium-style IDE hint mode for open editor tabs, Activity Bar entries, Explorer buttons, panels, terminals, and focused lists or trees.
+
+This project is not affiliated with Vimium.
 
 ## Features
 
-- `Vim Workflow: Show Editing Context` reports the open workspace count and active editor.
-- `Vim Workflow: Open Keyboard Shortcuts JSON` opens the user keybindings file.
-- `vimWorkflowTools.showNotifications` controls whether user-invoked commands show information notifications.
-- A custom `@vscode/test-electron` runner verifies the extension in an Extension Development Host.
+- `Vimium: Show Editor Navigation Hints` overlays hint labels on visible editor lines.
+- Type the shown label to jump the cursor directly to that line.
+- `Esc` cancels hint mode, `Backspace` edits the typed label, and `Enter` accepts the remaining exact target.
+- `Vimium: Show IDE Navigation Hints` assigns labels to current editor tabs, Activity Bar targets, Explorer controls, tree/list actions, global navigation, panels, terminals, status bar focus, and settings.
+- When VS Code is launched with the configured DevTools port, IDE hints use an experimental DOM overlay that draws labels directly over visible workbench buttons, tabs, rows, and controls.
+- IDE hints auto-run when you type the exact displayed label.
+- Direct wrapper commands are contributed for Activity Bar views, Side Bar focus, Explorer toolbar actions, tree/list movement, panels, terminal, status bar, and editor switching.
+
+## Default Keys
+
+| Key | Action | When |
+| --- | --- | --- |
+| `f` | Show IDE hints | Workbench, Side Bar, Activity Bar, or other non-editor focus |
+| `f` | Show editor hints | Editor focus when the VSCodeVim extension reports Normal mode |
+| `Alt+F` | Show editor hints | Editor focus |
+| `Shift+F` | Show IDE hints | Any focus |
+| `j` / `k` | Move down/up in focused VS Code list or tree | List/tree focus outside the editor |
+| `h` / `l` | Collapse/expand focused tree item | List/tree focus outside the editor |
+| `g e`, `g s`, `g c`, `g r`, `g x`, `g t` | Focus Explorer, Search, Source Control, Run and Debug, Extensions, or terminal | Non-editor focus |
+| `Esc` | Cancel hint mode | Hint mode |
+| `Backspace` | Delete typed hint character | Hint mode |
+| `Enter` | Accept hint | Hint mode |
+| `a`-`z`, `0`-`9` | Type hint character | Hint mode |
+
+## Experimental Direct Workbench Overlays
+
+VS Code does not expose private workbench DOM through the normal extension API. For a closer Vimium-style mode, this extension can optionally connect to VS Code's local Chrome DevTools Protocol endpoint and inject a temporary overlay into the workbench renderer.
+
+Start VS Code with the same port configured in `vimiumCode.workbenchDomOverlayDebugPort`:
+
+```sh
+code --remote-debugging-port=9333
+```
+
+Then run `Vimium: Show IDE Navigation Hints` or press the configured IDE hint key. If the endpoint is available, labels are drawn directly over visible workbench controls and typing a label dispatches a DOM click. If the endpoint is not available, the extension falls back to the supported command-backed IDE hint HUD/list.
+
+The local DevTools port is powerful; only enable it on a trusted machine and do not expose it beyond localhost. The included `Run Extension` debug configuration already passes `--remote-debugging-port=9333` for local development.
+
+## Settings
+
+- `vimiumCode.hintCharacters`: characters used to generate labels. Default: `asdfghjklqwertyuiopzxcvbnm`.
+- `vimiumCode.maxEditorHints`: maximum visible editor line targets per session. Default: `250`.
+- `vimiumCode.includeBlankLines`: include blank visible lines as targets. Default: `false`.
+- `vimiumCode.autoAcceptExactHint`: jump as soon as the typed label exactly matches a target. Default: `true`.
+- `vimiumCode.preferWorkbenchDomOverlay`: try experimental direct workbench DOM labels before falling back to the supported IDE hint HUD/list. Default: `true`.
+- `vimiumCode.workbenchDomOverlayDebugPort`: local DevTools port for experimental direct workbench DOM labels. Default: `9333`.
+
+Only letters and digits have default hint-mode keybindings. If you add punctuation to `vimiumCode.hintCharacters`, bind `vimiumCode.typeHintCharacter` manually with the desired `{ "character": "..." }` argument.
 
 ## Development
 
