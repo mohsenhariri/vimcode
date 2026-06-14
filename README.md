@@ -10,7 +10,8 @@ This project is not affiliated with Vimium.
 - Type the shown label to jump the cursor directly to that line.
 - `Esc` cancels hint mode, `Backspace` edits the typed label, and `Enter` accepts the remaining exact target.
 - `Vimium: Show IDE Navigation Hints` assigns labels to current editor tabs, Activity Bar targets, Explorer controls, tree/list actions, global navigation, panels, terminals, status bar focus, and settings.
-- When VS Code is launched with the configured DevTools port, IDE hints use an experimental DOM overlay that draws labels directly over visible workbench buttons, tabs, rows, and controls.
+- When VS Code is launched through the Vimium wrapper, IDE hints use an experimental DOM overlay that draws labels directly over visible workbench buttons, tabs, rows, and controls.
+- If the DOM overlay endpoint is unavailable, IDE hints fall back to the supported command-backed hint HUD/list.
 - IDE hints auto-run when you type the exact displayed label.
 - Direct wrapper commands are contributed for Activity Bar views, Side Bar focus, Explorer toolbar actions, tree/list movement, panels, terminal, status bar, and editor switching.
 
@@ -34,15 +35,31 @@ This project is not affiliated with Vimium.
 
 VS Code does not expose private workbench DOM through the normal extension API. For a closer Vimium-style mode, this extension can optionally connect to VS Code's local Chrome DevTools Protocol endpoint and inject a temporary overlay into the workbench renderer.
 
-Start VS Code with the same port configured in `vimiumCode.workbenchDomOverlayDebugPort`:
+Use the included launcher wrappers to make this look like a normal VS Code or VS Code Insiders flag:
 
 ```sh
-code --remote-debugging-port=9333
+./scripts/code --vim .
+./scripts/code-insiders --vim .
 ```
 
-Then run `Vimium: Show IDE Navigation Hints` or press the configured IDE hint key. If the endpoint is available, labels are drawn directly over visible workbench controls and typing a label dispatches a DOM click. If the endpoint is not available, the extension falls back to the supported command-backed IDE hint HUD/list.
+The wrappers remove `--vim` before launching VS Code and add `--remote-debugging-port=9333` internally. These forms are also accepted:
 
-The local DevTools port is powerful; only enable it on a trusted machine and do not expose it beyond localhost. The included `Run Extension` debug configuration already passes `--remote-debugging-port=9333` for local development.
+```sh
+./scripts/code-insiders --vim=true .
+./scripts/code-insiders --vim=1 .
+./scripts/code-insiders --vim-port=9444 .
+```
+
+To make the command exactly `code-insiders --vim`, put this repository's `scripts/` directory before `/usr/bin` in your `PATH`, or symlink the wrapper into a directory that already comes first:
+
+```sh
+ln -sf /path/to/vs_code_vim/scripts/code-insiders ~/.local/bin/code-insiders
+ln -sf /path/to/vs_code_vim/scripts/code ~/.local/bin/code
+```
+
+The wrapper skips itself and delegates to the real `code` or `code-insiders` binary. Then run `Vimium: Show IDE Navigation Hints` or press the configured IDE hint key. If the endpoint is available, labels are drawn directly over visible workbench controls and typing a label dispatches a DOM click. If the endpoint is not available, the extension falls back to the supported command-backed IDE hint HUD/list.
+
+The local DevTools port is powerful; only enable it on a trusted machine and do not expose it beyond localhost.
 
 ## Settings
 

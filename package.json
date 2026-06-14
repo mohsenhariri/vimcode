@@ -24,6 +24,9 @@
   ],
   "files": [
     "dist/extension.js",
+    "scripts/code",
+    "scripts/code-insiders",
+    "scripts/vimium-code-launcher.sh",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
