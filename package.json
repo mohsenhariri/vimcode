@@ -1,0 +1,74 @@
+{
+  "name": "vim-workflow-tools",
+  "displayName": "Vim Workflow Tools",
+  "description": "A VS Code extension scaffold for building Vim-oriented workflow tools.",
+  "version": "0.0.1",
+  "publisher": "mohsen",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.120.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "files": [
+    "dist/extension.js",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "main": "./dist/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "vimWorkflowTools.showEditingContext",
+        "title": "Show Editing Context",
+        "category": "Vim Workflow"
+      },
+      {
+        "command": "vimWorkflowTools.openKeyboardShortcuts",
+        "title": "Open Keyboard Shortcuts JSON",
+        "category": "Vim Workflow"
+      }
+    ],
+    "configuration": {
+      "title": "Vim Workflow Tools",
+      "properties": {
+        "vimWorkflowTools.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a notification after running user-invoked Vim Workflow commands."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && npm run bundle",
+    "watch": "node esbuild.js --watch",
+    "bundle": "node esbuild.js",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "test": "npm run compile && node scripts/run-tests.js",
+    "vsix": "npm run package && vsce package --allow-missing-repository",
+    "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('.vscode-test',{recursive:true,force:true});\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
+    "@types/vscode": "^1.120.0",
+    "@vscode/test-electron": "^3.0.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0"
+  }
+}
