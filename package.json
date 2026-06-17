@@ -1,10 +1,19 @@
 {
-  "name": "vimium-vscode",
-  "displayName": "Vimium for VS Code",
+  "name": "vimcode",
+  "displayName": "VimCode",
   "description": "Keyboard-first editor and IDE navigation hints for VS Code, inspired by Vimium.",
-  "version": "0.2.0",
-  "publisher": "mohsen",
+  "version": "0.3.0",
+  "publisher": "harimo",
   "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohsenhariri/vimcode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mohsenhariri/vimcode/issues"
+  },
+  "homepage": "https://github.com/mohsenhariri/vimcode#readme",
   "engines": {
     "vscode": "^1.120.0"
   },
@@ -24,11 +33,13 @@
   ],
   "files": [
     "dist/extension.js",
+    "images/icon.png",
     "scripts/code",
     "scripts/code-insiders",
     "scripts/vimium-code-launcher.sh",
     "README.md",
     "CHANGELOG.md",
+    "KNOWN_ISSUES.md",
     "LICENSE"
   ],
   "main": "./dist/extension.js",
@@ -39,6 +50,8 @@
     "onCommand:vimiumCode.acceptHint",
     "onCommand:vimiumCode.backspaceHint",
     "onCommand:vimiumCode.cancelHint",
+    "onCommand:vimiumCode.enterCommandMode",
+    "onCommand:vimiumCode.exitCommandMode",
     "onCommand:vimiumCode.scrollDown",
     "onCommand:vimiumCode.scrollUp",
     "onCommand:vimiumCode.pageDown",
@@ -107,6 +120,16 @@
       {
         "command": "vimiumCode.cancelHint",
         "title": "Cancel Hint Mode",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.enterCommandMode",
+        "title": "Enter Editor Command Mode",
+        "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.exitCommandMode",
+        "title": "Exit Editor Command Mode",
         "category": "Vimium"
       },
       {
@@ -282,6 +305,10 @@
         {
           "command": "vimiumCode.cancelHint",
           "when": "false"
+        },
+        {
+          "command": "vimiumCode.exitCommandMode",
+          "when": "false"
         }
       ]
     },
@@ -289,22 +316,112 @@
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "f",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
-      },
-      {
-        "command": "vimiumCode.enterHintMode",
-        "key": "f",
-        "when": "editorTextFocus && vim.mode == 'Normal' && !vimiumCode.hintMode"
-      },
-      {
-        "command": "vimiumCode.enterHintMode",
-        "key": "alt+f",
-        "when": "editorTextFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode",
+        "args": {
+          "force": false
+        }
       },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "shift+f",
-        "when": "!vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode",
+        "args": {
+          "force": false
+        }
+      },
+      {
+        "command": "vimiumCode.enterHintMode",
+        "key": "alt+j",
+        "when": "editorTextFocus && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.openWorkbenchHints",
+        "key": "alt+j",
+        "when": "webviewId && !vimiumCode.hintMode",
+        "args": {
+          "force": true
+        }
+      },
+      {
+        "command": "vimiumCode.enterCommandMode",
+        "key": "escape",
+        "when": "editorTextFocus && !vimiumCode.commandMode && !vimiumCode.hintMode && !suggestWidgetVisible && !parameterHintsVisible && !renameInputVisible && !inSnippetMode && !findWidgetVisible && !referenceSearchVisible && !inlineSuggestionVisible && !editorHasSelection && !editorHasMultipleSelections"
+      },
+      {
+        "command": "vimiumCode.exitCommandMode",
+        "key": "escape",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.openWorkbenchHints",
+        "key": "f",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.openWorkbenchHints",
+        "key": "shift+f",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.enterHintMode",
+        "key": "g f",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.exitCommandMode",
+        "key": "i",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.exitCommandMode",
+        "key": "a",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode",
+        "args": {
+          "action": "cursorRight"
+        }
+      },
+      {
+        "command": "vimiumCode.exitCommandMode",
+        "key": "o",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode",
+        "args": {
+          "action": "editor.action.insertLineAfter"
+        }
+      },
+      {
+        "command": "cursorLeft",
+        "key": "h",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "cursorDown",
+        "key": "j",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "cursorUp",
+        "key": "k",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "cursorRight",
+        "key": "l",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "cursorLeft",
+        "key": "backspace",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.goToTop",
+        "key": "g g",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+      },
+      {
+        "command": "vimiumCode.goToBottom",
+        "key": "shift+g",
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.cancelHint",
@@ -324,12 +441,12 @@
       {
         "command": "vimiumCode.scrollDown",
         "key": "ctrl+d",
-        "when": "editorTextFocus && vim.mode == 'Normal' && !vimiumCode.hintMode"
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.scrollUp",
         "key": "ctrl+u",
-        "when": "editorTextFocus && vim.mode == 'Normal' && !vimiumCode.hintMode"
+        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.listFocusDown",
@@ -359,32 +476,32 @@
       {
         "command": "vimiumCode.focusExplorer",
         "key": "g e",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.focusSearch",
         "key": "g s",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.focusSourceControl",
         "key": "g c",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.focusRunAndDebug",
         "key": "g r",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.focusExtensions",
         "key": "g x",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.toggleTerminal",
         "key": "g t",
-        "when": "!editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.typeHintCharacter",
@@ -725,7 +842,7 @@
     "lint": "eslint src",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
     "test": "npm run compile && node scripts/run-tests.js",
-    "vsix": "npm run package && vsce package --allow-missing-repository",
+    "vsix": "npm run package && vsce package",
     "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('.vscode-test',{recursive:true,force:true});\""
   },
   "devDependencies": {

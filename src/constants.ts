@@ -7,6 +7,8 @@ export const COMMANDS = {
   acceptHint: `${EXTENSION_NAMESPACE}.acceptHint`,
   backspaceHint: `${EXTENSION_NAMESPACE}.backspaceHint`,
   cancelHint: `${EXTENSION_NAMESPACE}.cancelHint`,
+  enterCommandMode: `${EXTENSION_NAMESPACE}.enterCommandMode`,
+  exitCommandMode: `${EXTENSION_NAMESPACE}.exitCommandMode`,
   scrollDown: `${EXTENSION_NAMESPACE}.scrollDown`,
   scrollUp: `${EXTENSION_NAMESPACE}.scrollUp`,
   pageDown: `${EXTENSION_NAMESPACE}.pageDown`,
@@ -41,7 +43,8 @@ export const COMMANDS = {
 } as const;
 
 export const CONTEXT_KEYS = {
-  hintMode: `${EXTENSION_NAMESPACE}.hintMode`
+  hintMode: `${EXTENSION_NAMESPACE}.hintMode`,
+  commandMode: `${EXTENSION_NAMESPACE}.commandMode`
 } as const;
 
 export const DEFAULT_HINT_CHARACTERS = "asdfghjklqwertyuiopzxcvbnm";

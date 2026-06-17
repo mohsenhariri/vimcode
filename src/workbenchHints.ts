@@ -342,6 +342,12 @@ export class WorkbenchHintController implements vscode.Disposable {
 
     const configuration = this.readConfiguration();
     const targets = await collectWorkbenchHintTargets();
+
+    if (this.session !== session) {
+      // The session was cancelled or replaced while awaiting; don't mutate it.
+      return;
+    }
+
     const labeledTargets = labelWorkbenchHintTargets(targets, configuration.hintCharacters);
     const nextPrefix = labeledTargets.some((target) => target.label.startsWith(session.prefix)) ? session.prefix : "";
 

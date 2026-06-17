@@ -1,6 +1,8 @@
 import * as vscode from "vscode";
 import { COMMANDS } from "./constants";
 import { getExtensionConfiguration } from "./configuration";
+import { CommandModeController } from "./commandModeController";
+import type { ExitCommandModeArgs } from "./commandModeController";
 import { EditorHintController } from "./editorHintController";
 import { executeBuiltInCommand } from "./vscodeCommands";
 import { tryOpenWorkbenchDomOverlay } from "./workbenchDomOverlay";
@@ -20,20 +22,40 @@ export { selectWorkbenchDevToolsTarget } from "./workbenchDomOverlay";
 export function activate(context: vscode.ExtensionContext): void {
   const hintController = new EditorHintController();
   const workbenchHintController = new WorkbenchHintController();
+  const commandModeController = new CommandModeController();
+  let warnedOverlayUnavailable = false;
 
   context.subscriptions.push(
     hintController,
     workbenchHintController,
+    commandModeController,
+    vscode.commands.registerCommand(COMMANDS.enterCommandMode, () => commandModeController.enter()),
+    vscode.commands.registerCommand(COMMANDS.exitCommandMode, (args: ExitCommandModeArgs | undefined) =>
+      commandModeController.exitWith(args)
+    ),
     vscode.commands.registerCommand(COMMANDS.enterHintMode, async () => {
+      await commandModeController.exit();
       await workbenchHintController.cancelHint();
       await hintController.enterHintMode();
     }),
-    vscode.commands.registerCommand(COMMANDS.openWorkbenchHints, async () => {
+    vscode.commands.registerCommand(COMMANDS.openWorkbenchHints, async (args?: { force?: boolean }) => {
       await hintController.cancelHint();
       const configuration = getExtensionConfiguration();
+      // Default to taking focus from a focused webview (e.g. when run from the
+      // Command Palette while a chat panel is focused). The bare-key bindings
+      // pass force:false so an accidental key never overrides a webview.
+      const force = args?.force !== false;
 
-      if (await tryOpenWorkbenchDomOverlay(configuration)) {
+      if (await tryOpenWorkbenchDomOverlay(configuration, force)) {
         return;
+      }
+
+      if (configuration.preferWorkbenchDomOverlay && !warnedOverlayUnavailable) {
+        warnedOverlayUnavailable = true;
+        void vscode.window.setStatusBarMessage(
+          `$(info) VimCode: launch with \`--remote-debugging-port=${configuration.workbenchDomOverlayDebugPort}\` (e.g. "code --vim") to draw IDE hints over the workbench. Showing the list for now.`,
+          6000
+        );
       }
 
       await workbenchHintController.openHints(configuration);

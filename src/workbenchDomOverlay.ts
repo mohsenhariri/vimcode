@@ -26,6 +26,8 @@ interface PendingCdpRequest {
 interface WorkbenchDomOverlayOptions {
   readonly hintCharacters: string;
   readonly maxHints: number;
+  /** Show hints even when a webview/iframe is focused, taking focus from it so labels can be typed. */
+  readonly force?: boolean;
 }
 
 export interface WorkbenchDevToolsTargetSelectionHints {
@@ -33,9 +35,13 @@ export interface WorkbenchDevToolsTargetSelectionHints {
 }
 
 const DEVTOOLS_REQUEST_TIMEOUT_MS = 400;
+const DEVTOOLS_EVAL_TIMEOUT_MS = 2000;
 const WORKBENCH_TARGET_PATTERN = /(?:vscode|workbench|Visual Studio Code)/i;
 
-export async function tryOpenWorkbenchDomOverlay(configuration: ExtensionConfiguration): Promise<boolean> {
+export async function tryOpenWorkbenchDomOverlay(
+  configuration: ExtensionConfiguration,
+  force = false
+): Promise<boolean> {
   if (!configuration.preferWorkbenchDomOverlay) {
     return false;
   }
@@ -46,21 +52,33 @@ export async function tryOpenWorkbenchDomOverlay(configuration: ExtensionConfigu
     return false;
   }
 
-  const connection = await connectCdp(target.webSocketDebuggerUrl, DEVTOOLS_REQUEST_TIMEOUT_MS);
+  let connection: CdpConnection | undefined;
 
   try {
-    const result = await connection.send("Runtime.evaluate", {
-      expression: createWorkbenchDomOverlayScript({
-        hintCharacters: configuration.hintCharacters,
-        maxHints: 350
-      }),
-      awaitPromise: false,
-      userGesture: true
-    });
+    connection = await connectCdp(target.webSocketDebuggerUrl, DEVTOOLS_REQUEST_TIMEOUT_MS);
+
+    const result = await connection.send(
+      "Runtime.evaluate",
+      {
+        expression: createWorkbenchDomOverlayScript({
+          hintCharacters: configuration.hintCharacters,
+          maxHints: 350,
+          force
+        }),
+        awaitPromise: false,
+        userGesture: true
+      },
+      DEVTOOLS_EVAL_TIMEOUT_MS
+    );
 
     return !hasCdpExceptionDetails(result);
+  } catch {
+    // A dead or half-open debug socket, a stale target URL, or a stalled
+    // evaluate should degrade gracefully to the supported Quick Pick fallback
+    // rather than hang the command or throw.
+    return false;
   } finally {
-    connection.dispose();
+    connection?.dispose();
   }
 }
 
@@ -184,6 +202,7 @@ async function connectCdp(url: string, timeoutMs: number): Promise<CdpConnection
 
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
+      socket.close();
       reject(new Error("Timed out connecting to VS Code DevTools endpoint"));
     }, timeoutMs);
 
@@ -201,6 +220,7 @@ async function connectCdp(url: string, timeoutMs: number): Promise<CdpConnection
       "error",
       () => {
         clearTimeout(timeout);
+        socket.close();
         reject(new Error("Failed to connect to VS Code DevTools endpoint"));
       },
       {
@@ -222,7 +242,11 @@ class CdpConnection {
     this.socket.addEventListener("error", () => this.rejectPending(new Error("VS Code DevTools connection failed")));
   }
 
-  public async send(method: string, params: Record<string, unknown>): Promise<unknown> {
+  public async send(
+    method: string,
+    params: Record<string, unknown>,
+    timeoutMs: number = DEVTOOLS_REQUEST_TIMEOUT_MS
+  ): Promise<unknown> {
     const id = this.nextId;
 
     this.nextId += 1;
@@ -235,9 +259,21 @@ class CdpConnection {
     );
 
     return await new Promise<unknown>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (this.pending.delete(id)) {
+          reject(new Error(`VS Code DevTools request "${method}" timed out`));
+        }
+      }, timeoutMs);
+
       this.pending.set(id, {
-        resolve,
-        reject
+        resolve: (value) => {
+          clearTimeout(timer);
+          resolve(value);
+        },
+        reject: (reason) => {
+          clearTimeout(timer);
+          reject(reason);
+        }
       });
     });
   }
@@ -325,6 +361,20 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
   const previousOverlay = document.getElementById(overlayId);
 
   previousOverlay?.remove();
+
+  const activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLIFrameElement) {
+    // Keyboard focus is inside a webview/iframe (another extension's panel,
+    // chat UI, etc.). On an accidental bare key, do not draw hints over it.
+    // When explicitly requested (force), take focus from the webview so the
+    // overlay can receive the typed label.
+    if (!options.force) {
+      return;
+    }
+
+    activeElement.blur();
+  }
 
   const targets = collectTargets();
 

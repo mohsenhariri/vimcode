@@ -1,13 +1,9 @@
 import * as vscode from "vscode";
 
 export async function executeBuiltInCommand(command: string, ...args: readonly unknown[]): Promise<void> {
-  const commands = await vscode.commands.getCommands(true);
-
-  if (!commands.includes(command)) {
-    await vscode.window.showWarningMessage(`Vimium: VS Code command is not available: ${command}`);
-    return;
-  }
-
+  // Run directly instead of enumerating every command first: this is on the hot
+  // path for held navigation keys, and a missing command surfaces as a rejection
+  // we already handle below.
   try {
     await vscode.commands.executeCommand(command, ...args);
   } catch (error) {

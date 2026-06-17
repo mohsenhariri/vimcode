@@ -200,7 +200,7 @@ export const tests: readonly TestCase[] = [
   {
     name: "registers contributed commands after activation",
     async run() {
-      const extension = vscode.extensions.getExtension("mohsen.vimium-vscode");
+      const extension = vscode.extensions.getExtension("harimo.vimcode");
 
       assert.ok(extension, "Expected extension to be available in the extension host");
       await extension.activate();
@@ -220,7 +220,7 @@ export const tests: readonly TestCase[] = [
         language: "plaintext"
       });
       const editor = await vscode.window.showTextDocument(document);
-      const extension = vscode.extensions.getExtension("mohsen.vimium-vscode");
+      const extension = vscode.extensions.getExtension("harimo.vimcode");
 
       assert.ok(extension, "Expected extension to be available in the extension host");
       await extension.activate();

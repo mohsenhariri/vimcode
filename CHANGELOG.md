@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 - 2026-06-16
+
+- Stopped activating editor hints from a bare `f` while editing. The editor is a text input, so plain `f` now types `f`.
+- Added a lightweight editor command mode: `Esc` enters it (when it has nothing else to dismiss), then `f`/`Shift+F` show IDE hints, `g f` shows editor line-jump hints, `h`/`j`/`k`/`l` move, `g g`/`Shift+G` jump to top/bottom, `Ctrl+D`/`Ctrl+U` scroll, and `i`/`a`/`o`/`Esc` resume editing. Text insertion is suppressed and a `-- COMMAND --` status bar indicator is shown while active.
+- Added a one-time status-bar hint when IDE hints fall back to the Quick Pick list because the workbench DOM overlay endpoint is unavailable, pointing to the `--remote-debugging-port` launch.
+- Removed the dependency on VSCodeVim's `vim.mode` context for editor hints and scrolling.
+- Fixed `Shift+F` opening IDE hints (and swallowing the keystroke) while typing in the editor; it now only triggers outside the editor or in command mode.
+- Fixed bare `f` opening IDE hints while the integrated terminal is focused.
+- Fixed bare `f`/`Shift+F`/`g …` opening IDE hints (and swallowing keystrokes) while a webview-based UI from another extension (e.g. a chat panel, docked as an editor tab or a side/bottom view) is focused, by requiring focus to be outside the editor area and outside any webview (`!editorAreaFocus && !webviewId`). The DOM overlay also refuses to draw when a webview/iframe holds focus.
+- Added `Alt+J` inside a focused webview tab to show IDE hints on purpose — VimCode takes focus from the webview so the hint label can be typed. (`Alt+J` is used instead of `Alt+F` because `Alt+F` is the File-menu mnemonic, which fires before extension keybindings.) Editor line-jump hints also moved from `Alt+F` to `Alt+J`.
+- `Show IDE Navigation Hints` now takes focus from a focused webview by default, so it works from the Command Palette for webviews that swallow `Alt` shortcuts and never forward them to VS Code (e.g. some chat panels).
+
 ## 0.2.0
 
 - Replaced the static IDE hint picker with a Vimium-style hint session for Activity Bar targets, open editor tabs, Explorer controls, tree/list actions, panels, terminals, status bar focus, and settings.
