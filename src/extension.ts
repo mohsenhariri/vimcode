@@ -15,6 +15,7 @@ export {
   createWorkbenchHintItems,
   getWorkbenchHintTargetsForTest
 } from "./workbenchHints";
+export { selectWorkbenchDevToolsTarget } from "./workbenchDomOverlay";
 
 export function activate(context: vscode.ExtensionContext): void {
   const hintController = new EditorHintController();

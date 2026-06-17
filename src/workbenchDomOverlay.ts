@@ -1,6 +1,8 @@
+import * as path from "node:path";
+import * as vscode from "vscode";
 import type { ExtensionConfiguration } from "./configuration";
 
-interface DevToolsTarget {
+export interface DevToolsTarget {
   readonly id: string;
   readonly title?: string;
   readonly type?: string;
@@ -24,6 +26,10 @@ interface PendingCdpRequest {
 interface WorkbenchDomOverlayOptions {
   readonly hintCharacters: string;
   readonly maxHints: number;
+}
+
+export interface WorkbenchDevToolsTargetSelectionHints {
+  readonly workspaceNames: readonly string[];
 }
 
 const DEVTOOLS_REQUEST_TIMEOUT_MS = 400;
@@ -83,14 +89,71 @@ async function findWorkbenchDevToolsTarget(port: number): Promise<DevToolsTarget
     return undefined;
   }
 
-  return targets
-    .filter(isDevToolsTarget)
-    .find(
-      (target) =>
-        target.type === "page" &&
-        Boolean(target.webSocketDebuggerUrl) &&
-        (WORKBENCH_TARGET_PATTERN.test(target.url ?? "") || WORKBENCH_TARGET_PATTERN.test(target.title ?? ""))
-    );
+  return selectWorkbenchDevToolsTarget(targets.filter(isDevToolsTarget), getWorkbenchTargetSelectionHints());
+}
+
+export function selectWorkbenchDevToolsTarget(
+  targets: readonly DevToolsTarget[],
+  hints: WorkbenchDevToolsTargetSelectionHints
+): DevToolsTarget | undefined {
+  const workbenchTargets = targets.filter(
+    (target) =>
+      target.type === "page" &&
+      Boolean(target.webSocketDebuggerUrl) &&
+      (WORKBENCH_TARGET_PATTERN.test(target.url ?? "") || WORKBENCH_TARGET_PATTERN.test(target.title ?? ""))
+  );
+
+  if (workbenchTargets.length <= 1) {
+    return workbenchTargets[0];
+  }
+
+  const normalizedHints = hints.workspaceNames.map(normalizeTargetText).filter((hint) => hint.length > 0);
+
+  if (normalizedHints.length === 0) {
+    return undefined;
+  }
+
+  const matchingTargets = workbenchTargets.filter((target) => {
+    const targetText = normalizeTargetText(`${target.title ?? ""} ${target.url ?? ""}`);
+
+    return normalizedHints.some((hint) => targetText.includes(hint));
+  });
+
+  return matchingTargets.length === 1 ? matchingTargets[0] : undefined;
+}
+
+function getWorkbenchTargetSelectionHints(): WorkbenchDevToolsTargetSelectionHints {
+  return {
+    workspaceNames: getWorkspaceNames()
+  };
+}
+
+function getWorkspaceNames(): readonly string[] {
+  const names = new Set<string>();
+
+  if (vscode.workspace.name) {
+    names.add(vscode.workspace.name);
+  }
+
+  for (const folder of vscode.workspace.workspaceFolders ?? []) {
+    names.add(folder.name);
+
+    if (folder.uri.scheme === "file") {
+      names.add(path.basename(folder.uri.fsPath));
+    }
+  }
+
+  if (vscode.workspace.workspaceFile?.scheme === "file") {
+    const workspaceFileName = path.basename(vscode.workspace.workspaceFile.fsPath, ".code-workspace");
+
+    names.add(workspaceFileName);
+  }
+
+  return Array.from(names);
+}
+
+function normalizeTargetText(value: string): string {
+  return value.toLowerCase();
 }
 
 function isDevToolsTarget(value: unknown): value is DevToolsTarget {

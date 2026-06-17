@@ -8,7 +8,8 @@ import {
   createWorkbenchHintItems,
   generateHintLabels,
   getWorkbenchHintTargetsForTest,
-  normalizeHintCharacters
+  normalizeHintCharacters,
+  selectWorkbenchDevToolsTarget
 } from "../../extension";
 
 export interface TestCase {
@@ -100,6 +101,62 @@ export const tests: readonly TestCase[] = [
       assert.equal(items[0]?.description, "Activity Bar");
       assert.ok(items.some((item) => item.description === "Explorer Buttons" && item.label.includes("New File")));
       assert.ok(items.every((item) => item.hintLabel.length === 1));
+    }
+  },
+  {
+    name: "does not choose an ambiguous workbench DevTools target",
+    run() {
+      const selectedTarget = selectWorkbenchDevToolsTarget(
+        [
+          {
+            id: "first",
+            type: "page",
+            title: "other-project - Visual Studio Code - Insiders",
+            url: "vscode-file://vscode-app/out/vs/code/electron-sandbox/workbench/workbench.html",
+            webSocketDebuggerUrl: "ws://127.0.0.1:9333/first"
+          },
+          {
+            id: "second",
+            type: "page",
+            title: "vs_code_vim - Visual Studio Code - Insiders",
+            url: "vscode-file://vscode-app/out/vs/code/electron-sandbox/workbench/workbench.html",
+            webSocketDebuggerUrl: "ws://127.0.0.1:9333/second"
+          }
+        ],
+        {
+          workspaceNames: []
+        }
+      );
+
+      assert.equal(selectedTarget, undefined);
+    }
+  },
+  {
+    name: "selects a workbench DevTools target by current workspace hint",
+    run() {
+      const selectedTarget = selectWorkbenchDevToolsTarget(
+        [
+          {
+            id: "first",
+            type: "page",
+            title: "other-project - Visual Studio Code - Insiders",
+            url: "vscode-file://vscode-app/out/vs/code/electron-sandbox/workbench/workbench.html",
+            webSocketDebuggerUrl: "ws://127.0.0.1:9333/first"
+          },
+          {
+            id: "second",
+            type: "page",
+            title: "vs_code_vim - Visual Studio Code - Insiders",
+            url: "vscode-file://vscode-app/out/vs/code/electron-sandbox/workbench/workbench.html",
+            webSocketDebuggerUrl: "ws://127.0.0.1:9333/second"
+          }
+        ],
+        {
+          workspaceNames: ["vs_code_vim"]
+        }
+      );
+
+      assert.equal(selectedTarget?.id, "second");
     }
   },
   {

@@ -89,3 +89,4 @@ npm run vsix
 ```
 
 The extension is bundled into `dist/extension.js` with `vscode` kept external, as required for VS Code extensions.
+
