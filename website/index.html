@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VimCode — Keyboard-first navigation for VS Code</title>
+  <meta name="description" content="VimCode brings Vimium-style keyboard navigation to VS Code — line-jump hints in the editor and hint labels over the whole IDE: Activity Bar, tabs, panels, lists and terminals." />
+  <meta name="theme-color" content="#1c1e26" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="VimCode — Keyboard-first navigation for VS Code" />
+  <meta property="og:description" content="Vimium-style keyboard navigation for the VS Code editor and the whole IDE chrome." />
+  <meta property="og:url" content="https://mohsenhariri.github.io/vimcode/" />
+  <meta property="og:image" content="./assets/overlay.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" type="image/png" href="./assets/icon.png" />
+  <link rel="apple-touch-icon" href="./assets/icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <!-- ====================== NAV ====================== -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#top" class="brand" aria-label="VimCode home">
+        <img src="./assets/icon.png" alt="" class="brand__logo" width="34" height="34" />
+        <span class="brand__name">Vim<span class="accent">Code</span></span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#cheatsheet">Cheatsheet</a>
+        <a href="#overlay">Overlay</a>
+        <a href="#install">Install</a>
+      </nav>
+      <div class="nav__cta">
+        <a class="btn btn--ghost" href="https://github.com/mohsenhariri/vimcode" target="_blank" rel="noopener" aria-label="GitHub repository">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.41-1.27.74-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.41-5.27 5.69.42.36.8 1.08.8 2.18v3.23c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+      <button class="nav__burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ====================== HERO ====================== -->
+    <section class="hero">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="hero__grid" aria-hidden="true"></div>
+
+      <!-- floating vimium hint chips -->
+      <div class="floaters" aria-hidden="true">
+        <span class="hint hint--float" style="--x:8%;  --y:24%; --d:0s">F</span>
+        <span class="hint hint--float" style="--x:20%; --y:62%; --d:.6s">gf</span>
+        <span class="hint hint--float" style="--x:86%; --y:18%; --d:1.1s">J</span>
+        <span class="hint hint--float" style="--x:78%; --y:68%; --d:.3s">K</span>
+        <span class="hint hint--float" style="--x:92%; --y:46%; --d:.9s">ge</span>
+        <span class="hint hint--float" style="--x:4%;  --y:74%; --d:1.4s">aa</span>
+      </div>
+
+      <div class="hero__inner">
+        <a class="pill" href="#install">
+          <span class="pill__dot"></span> v0.3.0 · UI extension · MIT
+        </a>
+        <h1 class="hero__title">
+          Drive VS&nbsp;Code from the<br />
+          <span class="grad">keyboard</span>, Vimium&nbsp;style.
+        </h1>
+        <p class="hero__sub">
+          VimCode paints jump labels on your editor lines <em>and</em> across the
+          whole IDE — Activity Bar, tabs, panels, lists, terminals. Type the label,
+          land where you wanted. No mouse required.
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#install">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M11 3h2v8h3l-4 5-4-5h3V3zM5 19h14v2H5z"/></svg>
+            Install
+          </a>
+          <a class="btn btn--ghost" href="#cheatsheet">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm2 3v2h2V8H6Zm0 4v2h2v-2H6Zm4-4v2h8V8h-8Zm0 4v2h8v-2h-8Z"/></svg>
+            View cheatsheet
+          </a>
+        </div>
+        <p class="hero__hint"><kbd>Alt</kbd>+<kbd>J</kbd> in the editor &nbsp;·&nbsp; <kbd>f</kbd> anywhere else &nbsp;·&nbsp; <kbd>Esc</kbd> for command mode</p>
+      </div>
+
+      <!-- product window -->
+      <figure class="window reveal">
+        <div class="window__bar">
+          <span class="window__dot"></span><span class="window__dot"></span><span class="window__dot"></span>
+          <span class="window__title">VimCode — Vimium hint labels over the workbench</span>
+        </div>
+        <img src="./assets/overlay.png" alt="VS Code with yellow Vimium-style hint labels drawn over the Activity Bar, Explorer, editor tabs, status bar and editor lines" loading="lazy" />
+      </figure>
+    </section>
+
+    <!-- ====================== MODES STRIP ====================== -->
+    <section class="modes">
+      <div class="container">
+        <div class="modes__grid">
+          <article class="mode">
+            <div class="mode__kbd"><kbd>Alt</kbd><kbd>J</kbd></div>
+            <h3>In the editor</h3>
+            <p>One-shot line-jump hints over every visible line. Type the label, the cursor teleports.</p>
+          </article>
+          <article class="mode">
+            <div class="mode__kbd"><kbd>f</kbd></div>
+            <h3>Anywhere else</h3>
+            <p>Side Bar, Activity Bar, panels, lists in focus? A bare <kbd>f</kbd> labels the IDE chrome.</p>
+          </article>
+          <article class="mode">
+            <div class="mode__kbd"><kbd>Esc</kbd></div>
+            <h3>Command mode</h3>
+            <p>A tiny Vim normal-mode for the editor: <kbd>h j k l</kbd>, <kbd>g g</kbd>, scroll, then <kbd>i</kbd> to type again.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== FEATURES ====================== -->
+    <section class="section" id="features">
+      <div class="container">
+        <header class="section__head reveal">
+          <span class="eyebrow">Features</span>
+          <h2>Everything reachable without the mouse</h2>
+          <p>Built on the public VS Code API as a UI-side extension — no runtime dependencies, just <code>vscode</code>.</p>
+        </header>
+
+        <div class="features">
+          <article class="card reveal">
+            <div class="card__icon" data-c="gold">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h12v2H3v-2Zm0 6h18v2H3v-2Z"/><rect x="16.5" y="10" width="5" height="4" rx="1" fill="currentColor"/></svg>
+            </div>
+            <h3>Editor line-jump hints</h3>
+            <p>Labels render on visible lines via editor decorations. Type to jump; the session auto-cancels on scroll, edit, or editor switch.</p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon" data-c="blue">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3 4h4v16H3V4Zm6 0h12v4H9V4Zm0 6h12v4H9v-4Zm0 6h12v4H9v-4Z"/></svg>
+            </div>
+            <h3>IDE navigation hints</h3>
+            <p>Label open tabs, Activity Bar entries, Explorer controls, panels, terminals, status bar and settings — then run them by name.</p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon" data-c="gold">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v3H4V4Zm0 6.5h16V20H4v-9.5ZM6 13v5h2v-5H6Z"/></svg>
+            </div>
+            <h3>Editor command mode</h3>
+            <p>VS Code has no normal mode, so VimCode adds one. <kbd>Esc</kbd> swallows text input, shows <span class="cmd">-- COMMAND --</span>, switches to a block cursor.</p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon" data-c="blue">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3 6.5 3.6L12 11.5 5.5 7.9 12 4.3ZM5 9.6l6 3.3v6.8l-6-3.3V9.6Zm14 0v6.8l-6 3.3v-6.8l6-3.3Z"/></svg>
+            </div>
+            <h3>Experimental DOM overlay</h3>
+            <p>Launch with the debug port and real Vimium-style labels are drawn directly over the workbench via the Chrome DevTools Protocol.</p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon" data-c="gold">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M5 4h14v2H5V4Zm2 4h12v2H7V8Zm-2 4h14v2H5v-2Zm2 4h12v2H7v-2Z"/></svg>
+            </div>
+            <h3>List &amp; tree motions</h3>
+            <p>With a list or tree focused, <kbd>j</kbd>/<kbd>k</kbd> move, <kbd>h</kbd>/<kbd>l</kbd> collapse/expand, <kbd>Enter</kbd> selects — straight from Vim muscle memory.</p>
+          </article>
+
+          <article class="card reveal">
+            <div class="card__icon" data-c="blue">
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8.9 4a8.9 8.9 0 0 0-.2-1.8l2-1.5-2-3.4-2.3 1a7 7 0 0 0-3-1.8L15 2H9l-.4 2.7a7 7 0 0 0-3 1.8l-2.3-1-2 3.4 2 1.5a8.9 8.9 0 0 0 0 3.6l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 3 1.8L9 22h6l.4-2.7a7 7 0 0 0 3-1.8l2.3 1 2-3.4-2-1.5c.13-.59.2-1.19.2-1.8Z"/></svg>
+            </div>
+            <h3>Tunable &amp; respectful</h3>
+            <p>Custom hint alphabet, hint caps, blank-line toggle, exact-match auto-accept. Bare keys never leak into editors, inputs, terminals or webviews.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== CHEATSHEET ====================== -->
+    <section class="section section--alt" id="cheatsheet">
+      <div class="container">
+        <header class="section__head reveal">
+          <span class="eyebrow">Cheatsheet</span>
+          <h2>Every key, in one place</h2>
+          <p>Filter by context or search for an action. Each binding shows where it's active.</p>
+        </header>
+
+        <div class="sheet__tools reveal">
+          <div class="sheet__filters" role="tablist" aria-label="Filter cheatsheet by context">
+            <button class="chip is-active" data-filter="all">All</button>
+            <button class="chip" data-filter="editor">Editor</button>
+            <button class="chip" data-filter="command">Command mode</button>
+            <button class="chip" data-filter="ide">IDE &amp; workbench</button>
+            <button class="chip" data-filter="list">Lists &amp; trees</button>
+            <button class="chip" data-filter="hint">Hint mode</button>
+            <button class="chip" data-filter="webview">Webviews</button>
+          </div>
+          <div class="sheet__search">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 1 0 4.9 14.3l5.4 5.4 1.4-1.4-5.4-5.4A8 8 0 0 0 10 2Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"/></svg>
+            <input type="search" id="sheetSearch" placeholder="Search actions… (e.g. scroll, explorer)" aria-label="Search cheatsheet" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="sheet" id="sheet">
+          <!-- EDITOR -->
+          <article class="sheet__card" data-cat="editor">
+            <h3 class="sheet__title"><span class="dot" data-c="gold"></span>Editor</h3>
+            <p class="sheet__when">When a text editor is focused</p>
+            <ul class="rows">
+              <li class="row"><span class="keys"><kbd>Alt</kbd><kbd>J</kbd></span><span class="act">Show editor line-jump hints (one-shot)</span></li>
+              <li class="row"><span class="keys"><kbd>Esc</kbd></span><span class="act">Enter command mode (when Esc has nothing else to dismiss)</span></li>
+            </ul>
+          </article>
+
+          <!-- COMMAND MODE -->
+          <article class="sheet__card" data-cat="command">
+            <h3 class="sheet__title"><span class="dot" data-c="gold"></span>Command mode</h3>
+            <p class="sheet__when">After <kbd>Esc</kbd> in the editor · <span class="cmd">-- COMMAND --</span></p>
+            <ul class="rows">
+              <li class="row"><span class="keys"><kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd></span><span class="act">Move cursor left / down / up / right</span></li>
+              <li class="row"><span class="keys"><kbd>Backspace</kbd></span><span class="act">Move cursor left</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>g</kbd> <span class="sep">/</span> <kbd>Shift</kbd><kbd>G</kbd></span><span class="act">Go to top / bottom of file</span></li>
+              <li class="row"><span class="keys"><kbd>Ctrl</kbd><kbd>D</kbd> <span class="sep">/</span> <kbd>Ctrl</kbd><kbd>U</kbd></span><span class="act">Scroll down / up</span></li>
+              <li class="row"><span class="keys"><kbd>f</kbd> <span class="sep">/</span> <kbd>Shift</kbd><kbd>F</kbd></span><span class="act">Show IDE hints over the workbench</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>f</kbd></span><span class="act">Show editor line-jump hints</span></li>
+              <li class="row"><span class="keys"><kbd>i</kbd> <span class="sep">/</span> <kbd>a</kbd> <span class="sep">/</span> <kbd>o</kbd></span><span class="act">Resume editing: insert / append / open line below</span></li>
+              <li class="row"><span class="keys"><kbd>Esc</kbd></span><span class="act">Exit command mode</span></li>
+            </ul>
+          </article>
+
+          <!-- IDE / WORKBENCH -->
+          <article class="sheet__card" data-cat="ide">
+            <h3 class="sheet__title"><span class="dot" data-c="blue"></span>IDE &amp; workbench</h3>
+            <p class="sheet__when">Non-editor focus: Side Bar, Activity Bar, panels</p>
+            <ul class="rows">
+              <li class="row"><span class="keys"><kbd>f</kbd> <span class="sep">/</span> <kbd>Shift</kbd><kbd>F</kbd></span><span class="act">Show IDE navigation hints</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>e</kbd></span><span class="act">Focus Explorer</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>s</kbd></span><span class="act">Focus Search</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>c</kbd></span><span class="act">Focus Source Control</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>r</kbd></span><span class="act">Focus Run and Debug</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>x</kbd></span><span class="act">Focus Extensions</span></li>
+              <li class="row"><span class="keys"><kbd>g</kbd><kbd>t</kbd></span><span class="act">Toggle the integrated terminal</span></li>
+            </ul>
+          </article>
+
+          <!-- LISTS / TREES -->
+          <article class="sheet__card" data-cat="list">
+            <h3 class="sheet__title"><span class="dot" data-c="blue"></span>Lists &amp; trees</h3>
+            <p class="sheet__when">When a list or tree is focused outside the editor</p>
+            <ul class="rows">
+              <li class="row"><span class="keys"><kbd>j</kbd> <span class="sep">/</span> <kbd>k</kbd></span><span class="act">Move down / up</span></li>
+              <li class="row"><span class="keys"><kbd>h</kbd> <span class="sep">/</span> <kbd>l</kbd></span><span class="act">Collapse / expand the focused item</span></li>
+              <li class="row"><span class="keys"><kbd>Enter</kbd></span><span class="act">Select the focused item</span></li>
+            </ul>
+          </article>
+
+          <!-- HINT MODE -->
+          <article class="sheet__card" data-cat="hint">
+            <h3 class="sheet__title"><span class="dot" data-c="gold"></span>Hint mode</h3>
+            <p class="sheet__when">While hint labels are on screen</p>
+            <ul class="rows">
+              <li class="row"><span class="keys"><kbd>a</kbd>–<kbd>z</kbd> <kbd>0</kbd>–<kbd>9</kbd></span><span class="act">Type the next hint character</span></li>
+              <li class="row"><span class="keys"><kbd>Enter</kbd></span><span class="act">Accept the remaining exact target</span></li>
+              <li class="row"><span class="keys"><kbd>Backspace</kbd></span><span class="act">Delete the last typed character</span></li>
+              <li class="row"><span class="keys"><kbd>Esc</kbd></span><span class="act">Cancel hint mode</span></li>
+            </ul>
+          </article>
+
+          <!-- WEBVIEWS -->
+          <article class="sheet__card" data-cat="webview">
+            <h3 class="sheet__title"><span class="dot" data-c="blue"></span>Webview tabs</h3>
+            <p class="sheet__when">Inside another extension's UI (chat panels, etc.)</p>
+            <ul class="rows">
+              <li class="row"><span class="keys"><kbd>Alt</kbd><kbd>J</kbd></span><span class="act">Show IDE hints — VimCode takes focus from the webview</span></li>
+              <li class="row"><span class="keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>P</kbd></span><span class="act">Fallback when a webview swallows Alt → run “Vimium: Show IDE Navigation Hints”</span></li>
+            </ul>
+          </article>
+        </div>
+
+        <p class="sheet__empty" id="sheetEmpty" hidden>No bindings match your search.</p>
+
+        <p class="sheet__foot reveal">
+          Bare <kbd>f</kbd> / <kbd>Shift</kbd><kbd>F</kbd> deliberately stay quiet inside editors, inputs, the terminal and webviews, so they never swallow what you type.
+          Rebind anything in <strong>Keyboard Shortcuts</strong> under the <code>vimiumCode.*</code> commands.
+        </p>
+      </div>
+    </section>
+
+    <!-- ====================== OVERLAY SHOWCASE ====================== -->
+    <section class="section" id="overlay">
+      <div class="container overlay__wrap">
+        <div class="overlay__copy reveal">
+          <span class="eyebrow">Experimental</span>
+          <h2>Real labels, drawn over the&nbsp;chrome</h2>
+          <p>
+            The extension API can't paint over the workbench, so VimCode offers an opt-in path:
+            launch VS Code with a local debugging port and it injects a temporary overlay through the
+            Chrome DevTools Protocol — labelling Activity Bar buttons, tabs, tree rows and controls,
+            then dispatching a synthetic click when you type a label.
+          </p>
+          <div class="codeblock">
+            <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="./scripts/code --vim .">Copy</button></div>
+            <pre><code><span class="c-prompt">$</span> ./scripts/code --vim .        <span class="c-comment"># adds --remote-debugging-port=9333</span>
+<span class="c-prompt">$</span> code-insiders --vim .         <span class="c-comment"># wrapper on your PATH</span></code></pre>
+          </div>
+          <p class="muted small">
+            No debug port? IDE hints gracefully fall back to a searchable Quick&nbsp;Pick list — everything
+            still works, it just isn't painted on top. The port is powerful: keep it on a trusted machine,
+            never beyond <code>localhost</code>.
+          </p>
+        </div>
+        <figure class="window overlay__shot reveal">
+          <div class="window__bar">
+            <span class="window__dot"></span><span class="window__dot"></span><span class="window__dot"></span>
+            <span class="window__title">--remote-debugging-port=9333</span>
+          </div>
+          <img src="./assets/overlay.png" alt="Hint labels painted across the VS Code workbench" loading="lazy" />
+        </figure>
+      </div>
+    </section>
+
+    <!-- ====================== INSTALL ====================== -->
+    <section class="section section--alt" id="install">
+      <div class="container">
+        <header class="section__head reveal">
+          <span class="eyebrow">Install</span>
+          <h2>Up and running in a minute</h2>
+          <p>VimCode is a UI extension — install it on the machine where the window runs.</p>
+        </header>
+
+        <div class="install">
+          <article class="install__card reveal">
+            <div class="install__num">1</div>
+            <h3>From a VSIX</h3>
+            <p>Grab the latest <code>.vsix</code> from Releases, then:</p>
+            <div class="codeblock">
+              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="code --install-extension vimcode-0.3.0.vsix">Copy</button></div>
+              <pre><code><span class="c-prompt">$</span> code --install-extension vimcode-0.3.0.vsix</code></pre>
+            </div>
+            <a class="btn btn--ghost btn--sm" href="https://github.com/mohsenhariri/vimcode/releases" target="_blank" rel="noopener">Releases →</a>
+          </article>
+
+          <article class="install__card reveal">
+            <div class="install__num">2</div>
+            <h3>Build it yourself</h3>
+            <p>Clone the repo and package a fresh VSIX:</p>
+            <div class="codeblock">
+              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="git clone https://github.com/mohsenhariri/vimcode.git
+cd vimcode && npm install && npm run vsix">Copy</button></div>
+              <pre><code><span class="c-prompt">$</span> git clone https://github.com/mohsenhariri/vimcode.git
+<span class="c-prompt">$</span> cd vimcode && npm install
+<span class="c-prompt">$</span> npm run vsix</code></pre>
+            </div>
+            <a class="btn btn--ghost btn--sm" href="https://github.com/mohsenhariri/vimcode" target="_blank" rel="noopener">Source →</a>
+          </article>
+
+          <article class="install__card reveal">
+            <div class="install__num">3</div>
+            <h3>Then press a key</h3>
+            <p>Open any file and try it:</p>
+            <ul class="install__keys">
+              <li><kbd>Alt</kbd><kbd>J</kbd> <span>line-jump hints in the editor</span></li>
+              <li><kbd>f</kbd> <span>IDE hints with the Side Bar focused</span></li>
+              <li><kbd>Esc</kbd> <span>enter command mode</span></li>
+            </ul>
+            <a class="btn btn--ghost btn--sm" href="#cheatsheet">Full cheatsheet →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================== CTA ====================== -->
+    <section class="cta">
+      <div class="container cta__inner reveal">
+        <img src="./assets/icon.png" alt="" width="64" height="64" class="cta__logo" />
+        <h2>Keep your hands on home row.</h2>
+        <p>Star it on GitHub, file an issue, or read the deep-dive on how the keybindings actually work.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="https://github.com/mohsenhariri/vimcode" target="_blank" rel="noopener">Star on GitHub</a>
+          <a class="btn btn--ghost" href="https://github.com/mohsenhariri/vimcode/blob/main/KNOWN_ISSUES.md" target="_blank" rel="noopener">Known issues</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ====================== FOOTER ====================== -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <img src="./assets/icon.png" alt="" width="30" height="30" />
+        <div>
+          <strong>Vim<span class="accent">Code</span></strong>
+          <span class="footer__by">by <a href="https://github.com/mohsenhariri" target="_blank" rel="noopener">mohsenhariri</a> · MIT</span>
+        </div>
+      </div>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="#features">Features</a>
+        <a href="#cheatsheet">Cheatsheet</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/mohsenhariri/vimcode" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/mohsenhariri/vimcode/issues" target="_blank" rel="noopener">Issues</a>
+      </nav>
+    </div>
+    <p class="footer__note">Not affiliated with Vimium. VS Code is a trademark of Microsoft.</p>
+  </footer>
+
+  <script src="./script.js" defer></script>
+</body>
+</html>
