@@ -474,7 +474,7 @@
         "key": "alt+j",
         "when": "terminalFocus && !inQuickOpen",
         "args": {
-          "commands": ["vimiumCode.openWorkbenchHints"]
+          "commands": [{ "command": "vimiumCode.openWorkbenchHints", "args": { "force": true } }]
         }
       },
       {
@@ -534,11 +534,13 @@
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "f",
+        "args": { "force": true },
         "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "shift+f",
+        "args": { "force": true },
         "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
@@ -871,7 +873,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.3",
     "@types/vscode": "1.120.0",
-    "@vscode/test-electron": "^3.0.0",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.1.1",
     "esbuild": "^0.28.1",
     "eslint": "^10.5.0",

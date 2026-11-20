@@ -1,5 +1,6 @@
 import * as assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as vscode from "vscode";
@@ -11,16 +12,7 @@ import {
   createWorkbenchHintItems
 } from "../../extension";
 import type { TestCase } from "./extension.test";
-
-async function waitFor(predicate: () => boolean, description: string): Promise<void> {
-  const deadline = Date.now() + 5000;
-  while (!predicate()) {
-    if (Date.now() >= deadline) {
-      assert.fail(`Timed out waiting for ${description}`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
-}
+import { waitFor } from "./waitFor";
 
 const configuration = {
   hintCharacters: "0123456789",
@@ -37,9 +29,9 @@ export const hintTests: readonly TestCase[] = [
     async run() {
       const previous = vscode.window.createWebviewPanel("vimcode.previousPanel", "VimCode earlier tab", vscode.ViewColumn.One);
       const panel = vscode.window.createWebviewPanel("vimcode.testPanel", "VimCode tab fixture", vscode.ViewColumn.One);
-      const document = await vscode.workspace.openTextDocument({ content: "Other editor group" });
+      const document = await vscode.workspace.openTextDocument({ language: "plaintext" });
       try {
-        const editor = await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.Two });
+        const editor = await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.Two, preview: false });
         await waitFor(() => vscode.window.tabGroups.activeTabGroup.viewColumn === editor.viewColumn, "second group");
         const target = createEditorTabHintTargets().find((entry) => entry.title.includes(panel.title));
         assert.ok(target?.execute, "Expected the webview tab in the list");
@@ -59,6 +51,12 @@ export const hintTests: readonly TestCase[] = [
       } finally {
         previous.dispose();
         panel.dispose();
+        const fixtureTab = vscode.window.tabGroups.all.flatMap(group => group.tabs).find(tab =>
+          tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === document.uri.toString());
+        if (fixtureTab) {
+          assert.ok(await vscode.window.tabGroups.close(fixtureTab, true), "Expected the split editor fixture to close");
+          await waitFor(() => vscode.window.visibleTextEditors.every(editor => editor.document !== document), "split editor fixture closure");
+        }
       }
     }
   },
@@ -105,7 +103,7 @@ export const hintTests: readonly TestCase[] = [
       const controller = new WorkbenchHintController(() => configuration);
       try {
         const first = controller.openHints();
-        const second = controller.openHints();
+        const second = controller.openHints(configuration, true);
         await controller.cancelHint();
         await Promise.all([first, second]);
         assert.equal(controller.isActive, false);
@@ -121,33 +119,43 @@ export const hintTests: readonly TestCase[] = [
   {
     name: "line hints preserve a preview tab and an edit cancels its pending label",
     async run() {
-      const directory = await mkdtemp(join(tmpdir(), "vimcode-preview-"));
+      const profile = process.env.VIMCODE_TEST_PROFILE;
+      const file = join(profile || tmpdir(), `vimcode-preview-${randomUUID()}.txt`);
+      await writeFile(file, "one\n  two\nthree", { flag: "wx" });
       try {
-        const file = join(directory, "preview.txt");
-        await writeFile(file, "one\n  two\nthree");
         const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
         const editor = await vscode.window.showTextDocument(document, { preview: true });
         const group = vscode.window.tabGroups.activeTabGroup;
         const tab = group.activeTab;
-        assert.ok(tab?.isPreview, "Expected a real preview tab before entering hint mode");
-        await vscode.commands.executeCommand(COMMANDS.enterHintMode);
-        await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "s" });
-        assert.deepEqual([editor.selection.active.line, editor.selection.active.character], [1, 2]);
-        assert.equal(group.activeTab, tab);
-        assert.ok(tab.isPreview, "Jumping must preserve preview state");
+        assert.ok(tab);
+        try {
+          assert.ok(tab.isPreview, "Expected a real preview tab before entering hint mode");
+          await vscode.commands.executeCommand(COMMANDS.enterHintMode);
+          await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "s" });
+          assert.deepEqual([editor.selection.active.line, editor.selection.active.character], [1, 2]);
+          assert.equal(group.activeTab, tab);
+          assert.ok(tab.isPreview, "Jumping must preserve preview state");
 
-        await vscode.commands.executeCommand(COMMANDS.enterHintMode);
-        await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), "text "));
-        await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
-        assert.equal(editor.selection.active.line, 1);
-        // Saving a dirty editor sends a document event with no content changes.
-        await vscode.commands.executeCommand(COMMANDS.enterHintMode);
-        await document.save();
-        await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
-        assert.equal(editor.selection.active.line, 0, "Saving the same text should preserve hints");
-        await vscode.window.tabGroups.close(tab);
+          await vscode.commands.executeCommand(COMMANDS.enterHintMode);
+          await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), "text "));
+          await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
+          assert.equal(editor.selection.active.line, 1);
+          // Saving a dirty editor sends a document event with no content changes.
+          await vscode.commands.executeCommand(COMMANDS.enterHintMode);
+          await document.save();
+          await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
+          assert.equal(editor.selection.active.line, 0, "Saving the same text should preserve hints");
+        } finally {
+          if (document.isDirty) {
+            await document.save();
+          }
+          await vscode.window.tabGroups.close(tab);
+        }
       } finally {
-        await rm(directory, { recursive: true, force: true });
+        // The runner removes its profile after VS Code releases its Windows directory handles.
+        if (!profile) {
+          await rm(file, { force: true });
+        }
       }
     }
   }

@@ -75,7 +75,8 @@ export function activate(context: vscode.ExtensionContext): void {
       const force = args?.force !== false;
 
       if (!(await overlay.open(configuration, force, signal)) && !signal.aborted) {
-        await workbenchHintController.openHints(configuration);
+        // Keybindings pass explicit arguments. The palette restores focus as it closes.
+        await workbenchHintController.openHints(configuration, args === undefined);
       }
     }),
     vscode.commands.registerCommand(COMMANDS.typeHintCharacter, (args) =>

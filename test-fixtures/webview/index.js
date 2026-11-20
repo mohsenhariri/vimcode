@@ -2,12 +2,10 @@ const vscode = require("vscode");
 
 exports.activate = function activate(context) {
   let latestInput;
-  let focusedWebview;
   function attach(webview) {
     latestInput = undefined;
     webview.options = { enableScripts: true };
     context.subscriptions.push(webview.onDidReceiveMessage(message => {
-      if (message.focusConfirmed) focusedWebview = webview;
       latestInput = message.value;
     }));
     webview.html = `<!doctype html><html lang="en"><meta charset="utf-8">
@@ -36,7 +34,6 @@ exports.activate = function activate(context) {
   }));
   return {
     get latestInput() { return latestInput; },
-    get focusedWebview() { return focusedWebview; },
     get sideView() { return sideView; },
     openPanel() {
       const panel = vscode.window.createWebviewPanel("vimcodeFixture.draft", "Fixture draft", vscode.ViewColumn.One);

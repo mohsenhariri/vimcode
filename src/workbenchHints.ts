@@ -1,3 +1,4 @@
+import { setTimeout as delay } from "node:timers/promises";
 import * as vscode from "vscode";
 import { COMMANDS, CONTEXT_KEYS } from "./constants";
 import { getExtensionConfiguration } from "./configuration";
@@ -38,6 +39,9 @@ interface WorkbenchHintSession {
   readonly disposables: vscode.Disposable[];
   prefix: string;
 }
+
+// VS Code's webview preload polls the focused frame at this interval.
+const WEBVIEW_FOCUS_POLL_MS = 250;
 
 const WORKBENCH_TARGETS: readonly CommandWorkbenchHintTarget[] = [
   {
@@ -218,6 +222,7 @@ const EXTENSION_VIEW_TARGETS: readonly CommandWorkbenchHintTarget[] = [
 export class WorkbenchHintController implements vscode.Disposable {
   private readonly statusBar: vscode.StatusBarItem;
   private generation = 0;
+  private loadingPicker: vscode.QuickPick<vscode.QuickPickItem> | undefined;
   private session: WorkbenchHintSession | undefined;
 
   public constructor(private readonly readConfiguration: () => ExtensionConfiguration = getExtensionConfiguration) {
@@ -231,22 +236,46 @@ export class WorkbenchHintController implements vscode.Disposable {
     return this.session !== undefined;
   }
 
-  public async openHints(configuration: ExtensionConfiguration = this.readConfiguration()): Promise<void> {
+  public async openHints(configuration: ExtensionConfiguration = this.readConfiguration(), fromPalette = false): Promise<void> {
     // Keep labels fixed until this picker closes. Reassigning a label while
     // the user types could launch a different tab or action.
     const closed = this.cancelHint();
     const generation = this.generation;
-    const [targets] = await Promise.all([collectWorkbenchHintTargets(), closed]);
-
-    if (generation !== this.generation) {
-      return;
+    const loading = fromPalette ? vscode.window.createQuickPick() : undefined;
+    if (loading) {
+      // The Command Palette can send a delayed focus message to its previous
+      // webview. Hold the native input open while that message is delivered.
+      this.loadingPicker = loading;
+      loading.ignoreFocusOut = true;
+      loading.busy = true;
+      loading.placeholder = "Loading IDE hints…";
+      loading.onDidHide(() => {
+        if (this.loadingPicker === loading) {
+          void this.cancelHint();
+        }
+      });
+      loading.show();
     }
-
-    if (targets.length === 0) {
-      void vscode.window.setStatusBarMessage("VimCode: no IDE targets are available in this window.", 1800);
-      return;
+    try {
+      const [targets] = await Promise.all([collectWorkbenchHintTargets(), closed, loading && delay(WEBVIEW_FOCUS_POLL_MS)]);
+      if (generation !== this.generation || (loading && !vscode.window.state.focused)) {
+        return;
+      }
+      if (targets.length === 0) {
+        void vscode.window.setStatusBarMessage("VimCode: no IDE targets are available in this window.", 1800);
+        return;
+      }
+      this.loadingPicker = undefined;
+      await this.showPicker(targets, configuration, loading?.value ?? "");
+    } finally {
+      if (this.loadingPicker === loading) {
+        this.loadingPicker = undefined;
+      }
+      loading?.dispose();
     }
+  }
 
+  private async showPicker(targets: readonly WorkbenchHintTarget[], configuration: ExtensionConfiguration, value: string): Promise<void> {
     const quickPick = vscode.window.createQuickPick<WorkbenchHintItem>();
     const labeledTargets = labelWorkbenchHintTargets(targets, configuration.hintCharacters);
     const session: WorkbenchHintSession = {
@@ -254,10 +283,10 @@ export class WorkbenchHintController implements vscode.Disposable {
       autoAcceptExactHint: configuration.autoAcceptExactHint,
       quickPick,
       disposables: [],
-      prefix: ""
+      prefix: value.toLowerCase()
     };
 
-    quickPick.ignoreFocusOut = false;
+    quickPick.value = value;
     quickPick.matchOnDescription = false;
     quickPick.matchOnDetail = false;
 
@@ -283,6 +312,9 @@ export class WorkbenchHintController implements vscode.Disposable {
     this.renderSession();
     quickPick.show();
     await vscode.commands.executeCommand("setContext", CONTEXT_KEYS.workbenchHintMode, true);
+    if (value && this.session === session && session.prefix === value.toLowerCase()) {
+      await this.replacePrefix(session.prefix);
+    }
   }
 
   public async typeHintCharacter(args: TypeHintCharacterArgs | string | undefined): Promise<void> {
@@ -339,6 +371,9 @@ export class WorkbenchHintController implements vscode.Disposable {
 
   public async cancelHint(): Promise<void> {
     ++this.generation;
+    const loading = this.loadingPicker;
+    this.loadingPicker = undefined;
+    loading?.dispose();
     if (!this.session) {
       return;
     }

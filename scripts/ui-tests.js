@@ -81,13 +81,31 @@ exports.run = async function run() {
   const pickerVisible = `${picker}?.offsetHeight > 0`;
   const idePicker = () => ui.evaluate(`${pickerVisible} && ${picker}.contains(document.activeElement) &&
     ${picker}.querySelector(".quick-input-titlebar")?.textContent.includes("Vimium IDE Hints")`);
+  const pickerDismissed = () => ui.evaluate(`!(${pickerVisible}) &&
+    !document.querySelector(".statusbar")?.textContent.includes("Vimium IDE:")`);
   const fixture = await vscode.extensions.getExtension("vimcode-tests.vimcode-ui-fixture").activate();
 
   async function focusDraft(webview) {
-    await until("the fixture draft to acquire keyboard focus", async () => {
-      await webview.postMessage("focusDraft");
-      return fixture.focusedWebview === webview;
+    let confirmed = false;
+    let requestPending = false;
+    const listener = webview.onDidReceiveMessage(message => {
+      if (typeof message.focusConfirmed === "boolean") {
+        requestPending = false;
+        confirmed = message.focusConfirmed;
+      }
     });
+    try {
+      await until("the fixture draft to acquire keyboard focus", async () => {
+        // A queued second request could move focus back from the Command Palette.
+        if (!confirmed && !requestPending) {
+          requestPending = true;
+          if (!await webview.postMessage("focusDraft")) requestPending = false;
+        }
+        return confirmed;
+      });
+    } finally {
+      listener.dispose();
+    }
   }
 
   function waitForEditorFocus() {
@@ -101,13 +119,24 @@ exports.run = async function run() {
     await until("Command Palette input", () => ui.evaluate(`${pickerVisible} && ${picker}.contains(document.activeElement) &&
       document.activeElement.value?.startsWith(">")`));
     await ui.send("Input.insertText", { text: `Vimium: ${title}` });
-    await until(title, () => ui.evaluate(`${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes(${JSON.stringify(title)})`));
+    await until(title, () => ui.evaluate(`${picker}.contains(document.activeElement) &&
+      !${picker}.getAnimations().some(animation => animation.playState === "running") &&
+      ${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes(${JSON.stringify(title)})`));
     await ui.key("Enter");
   }
 
   async function openFromPalette() {
     await runFromPalette("Show IDE Navigation Hints");
     await until("command-backed hint picker", idePicker);
+  }
+
+  async function openFromExplorer() {
+    await command("workbench.files.action.focusFilesExplorer");
+    await until("Explorer tree keyboard focus", () => ui.evaluate(
+      '!!document.activeElement?.closest(".part.sidebar .monaco-list")'
+    ));
+    await ui.key("F", 8);
+    await until("IDE hints from the Explorer shortcut", idePicker);
   }
 
   async function testEditorHintsFromSearch(editor) {
@@ -136,7 +165,7 @@ exports.run = async function run() {
 
     await openFromPalette();
     await ui.key("Escape");
-    await until("picker dismissed", async () => !await idePicker());
+    await until("picker dismissed", pickerDismissed);
     assert.equal(fixture.latestInput, "fgjhkli");
     console.log("PASS UI webview editor typing, Command Palette and picker dismissal");
 
@@ -145,19 +174,39 @@ exports.run = async function run() {
       document.activeElement instanceof HTMLIFrameElement &&
       new URL(document.activeElement.src).searchParams.get("extensionId") === "vimcode-tests.vimcode-ui-fixture"
     `));
-    await openFromPalette();
+
+    // Deliver the webview's pending focus restoration just as the picker takes focus.
+    const point = await ui.evaluate(`(() => {
+      const webview = document.activeElement;
+      function restoreFocus(event) {
+        if (${picker}?.contains(event.target)) {
+          document.removeEventListener("focusin", restoreFocus);
+          queueMicrotask(() => webview.focus());
+        }
+      }
+      document.addEventListener("focusin", restoreFocus);
+      const rect = webview.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.bottom - 12 };
+    })()`);
+    await command("vimiumCode.openWorkbenchHints");
+    await until("hint picker to regain keyboard focus", idePicker);
+    await ui.key(".");
+    await until("typed hint prefix", () => ui.evaluate(`${picker}.contains(document.activeElement) && document.activeElement.value === "."`));
+    assert.equal(fixture.latestInput, "fgjhkli");
+    await ui.send("Input.dispatchMouseEvent", { type: "mousePressed", ...point, button: "left", clickCount: 1 });
+    await ui.send("Input.dispatchMouseEvent", { type: "mouseReleased", ...point, button: "left", clickCount: 1 });
+    await until("hint picker dismissed by clicking the webview", pickerDismissed);
+    console.log("PASS UI picker recovers from delayed webview focus and dismisses on click");
+
+    await openFromExplorer();
     await ui.key("ArrowDown");
-    await until("Search selected", () => ui.evaluate(`${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes("Search")`));
+    await until("Search selected", () => ui.evaluate(`${picker}.contains(document.activeElement) &&
+      ${picker}.querySelector(".monaco-list-row.focused .label-name")?.textContent.trim().endsWith("Search")`));
     await ui.key("Enter");
     await until("Search view input", () => ui.evaluate('!!document.activeElement?.closest(".search-view")'));
     console.log("PASS UI Quick Pick arrows and Enter focus the highlighted view");
 
-    await command("workbench.files.action.focusFilesExplorer");
-    await until("Explorer tree keyboard focus", () => ui.evaluate(
-      '!!document.activeElement?.closest(".part.sidebar .monaco-list")'
-    ));
-    await ui.key("F", 8);
-    await until("IDE hints from the Explorer shortcut", idePicker);
+    await openFromExplorer();
     await ui.key("Escape");
     await until("Explorer hint picker dismissal", async () => !await idePicker());
     console.log("PASS UI Shift+F in the Explorer tree opens IDE hints");
