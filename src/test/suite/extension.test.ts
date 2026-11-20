@@ -12,6 +12,8 @@ import {
   selectWorkbenchDevToolsTarget
 } from "../../extension";
 
+const extensionId = "harimo9.vimcode";
+
 export interface TestCase {
   readonly name: string;
   run(): Promise<void> | void;
@@ -218,7 +220,7 @@ export const tests: readonly TestCase[] = [
   {
     name: "registers contributed commands after activation",
     async run() {
-      const extension = vscode.extensions.getExtension("harimo.vimcode");
+      const extension = vscode.extensions.getExtension(extensionId);
 
       assert.ok(extension, "Expected extension to be available in the extension host");
       await extension.activate();
@@ -238,7 +240,7 @@ export const tests: readonly TestCase[] = [
         language: "plaintext"
       });
       const editor = await vscode.window.showTextDocument(document);
-      const extension = vscode.extensions.getExtension("harimo.vimcode");
+      const extension = vscode.extensions.getExtension(extensionId);
 
       assert.ok(extension, "Expected extension to be available in the extension host");
       await extension.activate();

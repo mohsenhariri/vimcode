@@ -4,7 +4,7 @@
 
 VimCode is a VS Code extension that brings Vimium-style keyboard navigation to both the text editor (line-jump hints) and the IDE chrome (Activity Bar, tabs, panels, lists, terminals). It runs on the UI side (`extensionKind: ["ui"]`) and has no third-party runtime dependencies. VS Code provides the `vscode` module at runtime.
 
-The user-facing name is **VimCode** (publisher `harimo`). Use the internal namespace `vimiumCode` for extension command IDs, context keys, and settings. See `EXTENSION_NAMESPACE` in [src/constants.ts](src/constants.ts).
+The user-facing name is **VimCode** (publisher `harimo9`). Use the internal namespace `vimiumCode` for extension command IDs, context keys, and settings. See `EXTENSION_NAMESPACE` in [src/constants.ts](src/constants.ts).
 
 ## Commands
 
