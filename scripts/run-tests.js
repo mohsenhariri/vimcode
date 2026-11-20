@@ -45,9 +45,7 @@ async function main() {
   try {
     const userData = path.join(profile, "data");
     const profileArgs = [`--user-data-dir=${userData}`, `--extensions-dir=${path.join(profile, "extensions")}`];
-    const workspace = path.join(profile, "workspace");
-    await fs.mkdir(workspace);
-    const launchArgs = [workspace, ...profileArgs, "--disable-telemetry"];
+    const launchArgs = [...profileArgs, "--disable-telemetry"];
     if (ui) {
       extensionDevelopmentPath.push(path.join(root, "test-fixtures", "webview"));
       if (process.env.VIMCODE_CODEX_PATH) {
@@ -56,6 +54,9 @@ async function main() {
       if (vsix) {
         installVsix(vscodeExecutablePath, vsix, profileArgs);
       }
+      const workspace = path.join(profile, "workspace");
+      await fs.mkdir(workspace);
+      launchArgs.unshift(workspace);
       launchArgs.push("--remote-debugging-port=0");
     }
     await runTests({

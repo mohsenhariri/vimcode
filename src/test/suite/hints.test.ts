@@ -29,9 +29,9 @@ export const hintTests: readonly TestCase[] = [
     async run() {
       const previous = vscode.window.createWebviewPanel("vimcode.previousPanel", "VimCode earlier tab", vscode.ViewColumn.One);
       const panel = vscode.window.createWebviewPanel("vimcode.testPanel", "VimCode tab fixture", vscode.ViewColumn.One);
-      const document = await vscode.workspace.openTextDocument({ content: "Other editor group" });
+      const document = await vscode.workspace.openTextDocument({ language: "plaintext" });
       try {
-        const editor = await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.Two });
+        const editor = await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.Two, preview: false });
         await waitFor(() => vscode.window.tabGroups.activeTabGroup.viewColumn === editor.viewColumn, "second group");
         const target = createEditorTabHintTargets().find((entry) => entry.title.includes(panel.title));
         assert.ok(target?.execute, "Expected the webview tab in the list");
@@ -51,6 +51,12 @@ export const hintTests: readonly TestCase[] = [
       } finally {
         previous.dispose();
         panel.dispose();
+        const fixtureTab = vscode.window.tabGroups.all.flatMap(group => group.tabs).find(tab =>
+          tab.input instanceof vscode.TabInputText && tab.input.uri.toString() === document.uri.toString());
+        if (fixtureTab) {
+          assert.ok(await vscode.window.tabGroups.close(fixtureTab, true), "Expected the split editor fixture to close");
+          await waitFor(() => vscode.window.visibleTextEditors.every(editor => editor.document !== document), "split editor fixture closure");
+        }
       }
     }
   },

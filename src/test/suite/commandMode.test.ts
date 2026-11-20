@@ -4,13 +4,15 @@ import { COMMANDS } from "../../extension";
 import type { TestCase } from "./extension.test";
 import { waitFor } from "./waitFor";
 
-async function showCommandModeEditor(content: string, viewColumn: vscode.ViewColumn): Promise<vscode.TextEditor> {
+async function showCommandModeEditor(content: string, viewColumn: vscode.ViewColumn.One | vscode.ViewColumn.Two): Promise<vscode.TextEditor> {
   const document = await vscode.workspace.openTextDocument({ content });
   const editor = await vscode.window.showTextDocument(document, { viewColumn, preview: false });
-  await vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+  const focusGroup = viewColumn === vscode.ViewColumn.One ? "workbench.action.focusFirstEditorGroup" : "workbench.action.focusSecondEditorGroup";
+  await vscode.commands.executeCommand(focusGroup);
   const active = vscode.window.activeTextEditor;
+  const group = vscode.window.tabGroups.activeTabGroup;
   await waitFor(() => vscode.window.activeTextEditor === editor,
-    `${document.uri} in group ${viewColumn} to become active (focus landed on ${active?.document.uri ?? "no text editor"})`);
+    `${document.uri} in group ${viewColumn} (active editor ${active?.document.uri}, active tab ${group.activeTab?.label} in group ${group.viewColumn})`);
   return editor;
 }
 

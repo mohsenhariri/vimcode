@@ -85,14 +85,21 @@ exports.run = async function run() {
 
   async function focusDraft(webview) {
     let confirmed = false;
+    let requestPending = false;
     const listener = webview.onDidReceiveMessage(message => {
-      if (message.focusConfirmed) confirmed = true;
+      if (typeof message.focusConfirmed === "boolean") {
+        requestPending = false;
+        confirmed = message.focusConfirmed;
+      }
     });
     try {
       await until("the fixture draft to acquire keyboard focus", async () => {
-        if (confirmed) return true;
-        await webview.postMessage("focusDraft");
-        return false;
+        // A queued second request could move focus back from the Command Palette.
+        if (!confirmed && !requestPending) {
+          requestPending = true;
+          if (!await webview.postMessage("focusDraft")) requestPending = false;
+        }
+        return confirmed;
       });
     } finally {
       listener.dispose();
@@ -110,7 +117,9 @@ exports.run = async function run() {
     await until("Command Palette input", () => ui.evaluate(`${pickerVisible} && ${picker}.contains(document.activeElement) &&
       document.activeElement.value?.startsWith(">")`));
     await ui.send("Input.insertText", { text: `Vimium: ${title}` });
-    await until(title, () => ui.evaluate(`${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes(${JSON.stringify(title)})`));
+    await until(title, () => ui.evaluate(`${picker}.contains(document.activeElement) &&
+      !${picker}.getAnimations().some(animation => animation.playState === "running") &&
+      ${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes(${JSON.stringify(title)})`));
     await ui.key("Enter");
   }
 
