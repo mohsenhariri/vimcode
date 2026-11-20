@@ -128,6 +128,15 @@ exports.run = async function run() {
     await until("command-backed hint picker", idePicker);
   }
 
+  async function openFromExplorer() {
+    await command("workbench.files.action.focusFilesExplorer");
+    await until("Explorer tree keyboard focus", () => ui.evaluate(
+      '!!document.activeElement?.closest(".part.sidebar .monaco-list")'
+    ));
+    await ui.key("F", 8);
+    await until("IDE hints from the Explorer shortcut", idePicker);
+  }
+
   async function testEditorHintsFromSearch(editor) {
     await command("workbench.action.findInFiles");
     await until("Search box focus", () => ui.evaluate('!!document.activeElement?.closest(".search-view")'));
@@ -164,20 +173,15 @@ exports.run = async function run() {
       document.activeElement instanceof HTMLIFrameElement &&
       new URL(document.activeElement.src).searchParams.get("extensionId") === "vimcode-tests.vimcode-ui-fixture"
     `));
-    await focusDraft(panel.webview);
-    await openFromPalette();
+    await openFromExplorer();
     await ui.key("ArrowDown");
-    await until("Search selected", () => ui.evaluate(`${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes("Search")`));
+    await until("Search selected", () => ui.evaluate(`${picker}.contains(document.activeElement) &&
+      ${picker}.querySelector(".monaco-list-row.focused .label-name")?.textContent.trim().endsWith("Search")`));
     await ui.key("Enter");
     await until("Search view input", () => ui.evaluate('!!document.activeElement?.closest(".search-view")'));
     console.log("PASS UI Quick Pick arrows and Enter focus the highlighted view");
 
-    await command("workbench.files.action.focusFilesExplorer");
-    await until("Explorer tree keyboard focus", () => ui.evaluate(
-      '!!document.activeElement?.closest(".part.sidebar .monaco-list")'
-    ));
-    await ui.key("F", 8);
-    await until("IDE hints from the Explorer shortcut", idePicker);
+    await openFromExplorer();
     await ui.key("Escape");
     await until("Explorer hint picker dismissal", async () => !await idePicker());
     console.log("PASS UI Shift+F in the Explorer tree opens IDE hints");
