@@ -1,8 +1,6 @@
 # VimCode
 
-Keyboard-first navigation for VS Code, inspired by Vimium. This extension adds visible hint labels in the active editor and a Vimium-style IDE hint mode for open editor tabs, Activity Bar entries, Explorer buttons, panels, terminals, and focused lists or trees.
-
-This project is not affiliated with Vimium.
+Keyboard-first navigation for VS Code, inspired by [Vimium](https://github.com/philc/vimium). This extension adds visible hint labels in the active editor and a Vimium-style IDE hint mode for open editor tabs, Activity Bar entries, Explorer buttons, panels, terminals, and focused lists or trees.
 
 ## Features
 
@@ -102,6 +100,8 @@ The experimental overlay runs in trusted workspaces. Keep its debugging endpoint
 Choose at least two distinct ASCII letters or digits for the hint alphabet. VimCode ignores duplicates and uses the default alphabet if fewer than two supported characters remain.
 
 ## Development
+
+Use Node.js 24 to install dependencies and run the tests.
 
 ```sh
 npm ci
