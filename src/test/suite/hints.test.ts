@@ -12,16 +12,7 @@ import {
   createWorkbenchHintItems
 } from "../../extension";
 import type { TestCase } from "./extension.test";
-
-async function waitFor(predicate: () => boolean, description: string): Promise<void> {
-  const deadline = Date.now() + 5000;
-  while (!predicate()) {
-    if (Date.now() >= deadline) {
-      assert.fail(`Timed out waiting for ${description}`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
-}
+import { waitFor } from "./waitFor";
 
 const configuration = {
   hintCharacters: "0123456789",
