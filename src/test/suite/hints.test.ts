@@ -103,7 +103,7 @@ export const hintTests: readonly TestCase[] = [
       const controller = new WorkbenchHintController(() => configuration);
       try {
         const first = controller.openHints();
-        const second = controller.openHints();
+        const second = controller.openHints(configuration, true);
         await controller.cancelHint();
         await Promise.all([first, second]);
         assert.equal(controller.isActive, false);

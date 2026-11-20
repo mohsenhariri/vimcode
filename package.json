@@ -474,7 +474,7 @@
         "key": "alt+j",
         "when": "terminalFocus && !inQuickOpen",
         "args": {
-          "commands": ["vimiumCode.openWorkbenchHints"]
+          "commands": [{ "command": "vimiumCode.openWorkbenchHints", "args": { "force": true } }]
         }
       },
       {
@@ -534,11 +534,13 @@
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "f",
+        "args": { "force": true },
         "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "shift+f",
+        "args": { "force": true },
         "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {

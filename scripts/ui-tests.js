@@ -81,6 +81,8 @@ exports.run = async function run() {
   const pickerVisible = `${picker}?.offsetHeight > 0`;
   const idePicker = () => ui.evaluate(`${pickerVisible} && ${picker}.contains(document.activeElement) &&
     ${picker}.querySelector(".quick-input-titlebar")?.textContent.includes("Vimium IDE Hints")`);
+  const pickerDismissed = () => ui.evaluate(`!(${pickerVisible}) &&
+    !document.querySelector(".statusbar")?.textContent.includes("Vimium IDE:")`);
   const fixture = await vscode.extensions.getExtension("vimcode-tests.vimcode-ui-fixture").activate();
 
   async function focusDraft(webview) {
@@ -163,8 +165,7 @@ exports.run = async function run() {
 
     await openFromPalette();
     await ui.key("Escape");
-    await until("picker dismissed", () => ui.evaluate(`!(${pickerVisible}) &&
-      !document.querySelector(".statusbar")?.textContent.includes("Vimium IDE:")`));
+    await until("picker dismissed", pickerDismissed);
     assert.equal(fixture.latestInput, "fgjhkli");
     console.log("PASS UI webview editor typing, Command Palette and picker dismissal");
 
@@ -173,6 +174,30 @@ exports.run = async function run() {
       document.activeElement instanceof HTMLIFrameElement &&
       new URL(document.activeElement.src).searchParams.get("extensionId") === "vimcode-tests.vimcode-ui-fixture"
     `));
+
+    // Deliver the webview's pending focus restoration just as the picker takes focus.
+    const point = await ui.evaluate(`(() => {
+      const webview = document.activeElement;
+      function restoreFocus(event) {
+        if (${picker}?.contains(event.target)) {
+          document.removeEventListener("focusin", restoreFocus);
+          queueMicrotask(() => webview.focus());
+        }
+      }
+      document.addEventListener("focusin", restoreFocus);
+      const rect = webview.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.bottom - 12 };
+    })()`);
+    await command("vimiumCode.openWorkbenchHints");
+    await until("hint picker to regain keyboard focus", idePicker);
+    await ui.key(".");
+    await until("typed hint prefix", () => ui.evaluate(`${picker}.contains(document.activeElement) && document.activeElement.value === "."`));
+    assert.equal(fixture.latestInput, "fgjhkli");
+    await ui.send("Input.dispatchMouseEvent", { type: "mousePressed", ...point, button: "left", clickCount: 1 });
+    await ui.send("Input.dispatchMouseEvent", { type: "mouseReleased", ...point, button: "left", clickCount: 1 });
+    await until("hint picker dismissed by clicking the webview", pickerDismissed);
+    console.log("PASS UI picker recovers from delayed webview focus and dismisses on click");
+
     await openFromExplorer();
     await ui.key("ArrowDown");
     await until("Search selected", () => ui.evaluate(`${picker}.contains(document.activeElement) &&
