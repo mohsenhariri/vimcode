@@ -2,8 +2,16 @@ name: Test extension
 
 on:
   push:
+    branches: ['**']
+    # Release tags run these tests through publish-marketplace.yml.
+    tags-ignore: ['v[0-9]+.[0-9]+.[0-9]+']
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      upload-vsix:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -43,8 +51,15 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          npm run vsix
-          packages=(*.vsix)
-          test "${#packages[@]}" -eq 1
-          unzip -t "${packages[0]}"
-          env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 VIMCODE_VSIX="${packages[0]}" xvfb-run -a node scripts/run-tests.js --ui
+          package="$RUNNER_TEMP/vimcode.vsix"
+          npm run vsix -- --out "$package"
+          unzip -t "$package"
+          env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 VIMCODE_VSIX="$package" xvfb-run -a node scripts/run-tests.js --ui
+      - name: Upload the tested VSIX for publishing
+        if: inputs.upload-vsix && runner.os == 'Linux' && matrix.vscode == 'stable'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: marketplace-vsix
+          path: ${{ runner.temp }}/vimcode.vsix
+          if-no-files-found: error
+          overwrite: true

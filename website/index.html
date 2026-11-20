@@ -131,7 +131,6 @@
         <header class="section__head reveal">
           <span class="eyebrow">Features</span>
           <h2>Everything reachable without the mouse</h2>
-          <p>Built on the public VS Code API as a UI-side extension — no runtime dependencies, just <code>vscode</code>.</p>
         </header>
 
         <div class="features">
@@ -140,7 +139,7 @@
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h12v2H3v-2Zm0 6h18v2H3v-2Z"/><rect x="16.5" y="10" width="5" height="4" rx="1" fill="currentColor"/></svg>
             </div>
             <h3>Editor line-jump hints</h3>
-            <p>Labels render on visible lines via editor decorations. Type to jump; the session auto-cancels on scroll, edit, or editor switch.</p>
+            <p>Type a label to jump to a visible line. Scrolling, editing, or switching editors dismisses the labels.</p>
           </article>
 
           <article class="card reveal">
@@ -164,7 +163,7 @@
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3 6.5 3.6L12 11.5 5.5 7.9 12 4.3ZM5 9.6l6 3.3v6.8l-6-3.3V9.6Zm14 0v6.8l-6 3.3v-6.8l6-3.3Z"/></svg>
             </div>
             <h3>Experimental DOM overlay</h3>
-            <p>Launch with the debug port and real Vimium-style labels are drawn directly over the workbench via the Chrome DevTools Protocol.</p>
+            <p>Launch VS Code with a local debugging port to see labels directly on workbench tabs, buttons, and controls.</p>
           </article>
 
           <article class="card reveal">
@@ -304,15 +303,12 @@
           <span class="eyebrow">Experimental</span>
           <h2>Real labels, drawn over the&nbsp;chrome</h2>
           <p>
-            The extension API can't paint over the workbench, so VimCode offers an opt-in path:
-            launch VS Code with a local debugging port and it injects a temporary overlay through the
-            Chrome DevTools Protocol — labelling Activity Bar buttons, tabs, tree rows and controls,
-            then dispatching a synthetic click when you type a label.
+            Fully quit desktop VS Code and relaunch it with a local debugging port. In a trusted workspace,
+            run <strong>Vimium: Show IDE Navigation Hints</strong> and type a label to activate its control.
           </p>
           <div class="codeblock">
-            <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="./scripts/code --vim .">Copy</button></div>
-            <pre><code><span class="c-prompt">$</span> ./scripts/code --vim .        <span class="c-comment"># adds --remote-debugging-port=9333</span>
-<span class="c-prompt">$</span> code-insiders --vim .         <span class="c-comment"># wrapper on your PATH</span></code></pre>
+            <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="code --remote-debugging-port=9333 .">Copy</button></div>
+            <pre><code><span class="c-prompt">$</span> code --remote-debugging-port=9333 .</code></pre>
           </div>
           <p class="muted small">
             A normal launch uses a Quick&nbsp;Pick with labels for tabs, terminals, Codex and workbench actions.
@@ -340,34 +336,23 @@
 
         <div class="install">
           <article class="install__card reveal">
-            <div class="install__num">1</div>
-            <h3>From a VSIX</h3>
-            <p>Grab the latest <code>.vsix</code> from Releases, then:</p>
+            <h3>From the Marketplace</h3>
+            <p>Search for <code>harimo9.vimcode</code> in the Extensions view, or install from the command line.</p>
             <div class="codeblock">
-              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="code --install-extension vimcode-0.3.2.vsix">Copy</button></div>
-              <pre><code><span class="c-prompt">$</span> code --install-extension vimcode-0.3.2.vsix</code></pre>
+              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="code --install-extension harimo9.vimcode">Copy</button></div>
+              <pre><code><span class="c-prompt">$</span> code --install-extension harimo9.vimcode</code></pre>
             </div>
-            <a class="btn btn--ghost btn--sm" href="https://github.com/mohsenhariri/vimcode/releases" target="_blank" rel="noopener">Releases →</a>
+            <a class="btn btn--ghost btn--sm" href="https://marketplace.visualstudio.com/items?itemName=harimo9.vimcode" target="_blank" rel="noopener">Open Marketplace →</a>
           </article>
 
           <article class="install__card reveal">
-            <div class="install__num">2</div>
-            <h3>Build it yourself</h3>
-            <p>Clone the repo and package a fresh VSIX:</p>
-            <div class="codeblock">
-              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="git clone https://github.com/mohsenhariri/vimcode.git
-cd vimcode && npm install && npm run vsix">Copy</button></div>
-              <pre><code><span class="c-prompt">$</span> git clone https://github.com/mohsenhariri/vimcode.git
-<span class="c-prompt">$</span> cd vimcode && npm install
-<span class="c-prompt">$</span> npm run vsix</code></pre>
-            </div>
-            <a class="btn btn--ghost btn--sm" href="https://github.com/mohsenhariri/vimcode" target="_blank" rel="noopener">Source →</a>
+            <h3>From a VSIX file</h3>
+            <p>If you already have a <code>.vsix</code> file, open the Extensions view menu, select <strong>Install from VSIX…</strong>, and choose the file.</p>
           </article>
 
           <article class="install__card reveal">
-            <div class="install__num">3</div>
-            <h3>Then press a key</h3>
-            <p>Open any file and try it:</p>
+            <h3>Try VimCode</h3>
+            <p>Open a file and try these shortcuts.</p>
             <ul class="install__keys">
               <li><kbd>Alt</kbd><kbd>J</kbd> <span>line-jump hints in the editor</span></li>
               <li><kbd>f</kbd> <span>IDE hints with the Explorer tree focused</span></li>

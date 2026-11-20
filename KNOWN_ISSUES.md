@@ -8,7 +8,7 @@ The picker can focus the Codex sidebar, switch to an existing webview tab, or op
 
 ## Experimental workbench overlay
 
-A normal VS Code launch uses the IDE hint picker. For labels over the workbench, start desktop VS Code with a loopback debugging port and use a trusted workspace. Fully quit a running instance before changing its launch flags, or use a separate profile directory. In a multi-window session, ambiguous window titles can also cause VimCode to use the picker. [Launcher setup](README.md#experimental-direct-workbench-overlays)
+A normal VS Code launch uses the IDE hint picker. For labels over the workbench, start desktop VS Code with a loopback debugging port and use a trusted workspace. Fully quit a running instance before changing its launch flags, or use a separate profile directory. In a multi-window session, ambiguous window titles can also cause VimCode to use the picker. [Overlay setup](README.md#experimental-direct-workbench-overlays)
 
 Workbench markup can change between VS Code releases. Native dropdowns and keyboard-only controls may receive focus and require another keystroke to open. Press `Esc` to dismiss labels or disable `vimiumCode.preferWorkbenchDomOverlay` in User Settings to always use the picker.
 

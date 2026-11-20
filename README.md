@@ -2,7 +2,60 @@
 
 Keyboard-first navigation for VS Code, inspired by [Vimium](https://github.com/philc/vimium). This extension adds visible hint labels in the active editor and a Vimium-style IDE hint mode for open editor tabs, Activity Bar entries, Explorer buttons, panels, terminals, and focused lists or trees.
 
-[VS Code extension](https://marketplace.visualstudio.com/items?itemName=harimo9.vimcode)
+## Install
+
+Search for `harimo9.vimcode` in the Extensions view, or install VimCode from the command line. [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=harimo9.vimcode)
+
+```sh
+code --install-extension harimo9.vimcode
+```
+
+### Install from source
+
+Use Node.js 24. From the root of your VimCode checkout, build and install the VSIX.
+
+```sh
+npm ci
+npm run vsix -- --out vimcode.vsix
+code --install-extension ./vimcode.vsix
+```
+
+For VS Code Insiders, use `code-insiders` in the last command. You can also open the Extensions view menu and choose **Install from VSIX…**.
+
+#### Optional launcher wrappers
+
+The VS Code extension API does not expose the workbench DOM. VimCode can use the local Chrome DevTools Protocol endpoint to draw a temporary overlay with hint labels over workbench controls.
+
+Fully quit VS Code, then run one of the included Bash launchers from your checkout.
+
+```sh
+./scripts/code --vim .
+./scripts/code-insiders --vim .
+```
+
+The wrappers consume `--vim` and launch VS Code with `--remote-debugging-port=9333` by default. They also accept these forms.
+
+```sh
+./scripts/code-insiders --vim=true .
+./scripts/code-insiders --vim=1 .
+./scripts/code-insiders --vim-port=9444 .
+```
+
+To run `code --vim` or `code-insiders --vim` from any directory, add the checkout's `scripts/` directory ahead of the VS Code executables on `PATH`. From the checkout root, run this in your shell.
+
+```sh
+export PATH="$(pwd -P)/scripts:$PATH"
+```
+
+You can also create symlinks in a directory that already comes first on `PATH`. These examples use `$HOME/.local/bin`.
+
+```sh
+mkdir -p "$HOME/.local/bin"
+ln -s "$(pwd -P)/scripts/code-insiders" "$HOME/.local/bin/code-insiders"
+ln -s "$(pwd -P)/scripts/code" "$HOME/.local/bin/code"
+```
+
+Each wrapper skips itself when looking for the actual VS Code executable on `PATH`. See [overlay setup](#experimental-direct-workbench-overlays) for trusted workspaces, custom ports, and the fallback picker.
 
 ## Features
 
@@ -10,7 +63,7 @@ Keyboard-first navigation for VS Code, inspired by [Vimium](https://github.com/p
 - Type the shown label to jump the cursor directly to that line.
 - `Esc` cancels hint mode, `Backspace` edits the typed label, and `Enter` accepts the remaining exact target.
 - `Vimium: Show IDE Navigation Hints` assigns labels to current editor tabs, Activity Bar targets, Explorer controls, tree/list actions, global navigation, panels, terminals, status bar focus, and settings.
-- When VS Code is launched through the Vimium wrapper, IDE hints use an experimental DOM overlay that draws labels directly over visible workbench buttons, tabs, rows, and controls.
+- The [experimental overlay](#experimental-direct-workbench-overlays) draws IDE hint labels directly over visible workbench buttons, tabs, rows, and controls.
 - If the DOM overlay endpoint is unavailable, IDE hints fall back to the supported command-backed hint HUD/list.
 - IDE hints auto-run when you type the exact displayed label.
 - Direct wrapper commands are contributed for Activity Bar views, Side Bar focus, Explorer toolbar actions, tree/list movement, panels, terminal, status bar, and editor switching.
@@ -62,33 +115,15 @@ A few behaviors are inherent limitations of the VS Code API or of how other exte
 
 ## Experimental Direct Workbench Overlays
 
-VS Code does not expose private workbench DOM through the normal extension API. For a closer Vimium-style mode, this extension can optionally connect to VS Code's local Chrome DevTools Protocol endpoint and inject a temporary overlay into the workbench renderer.
-
-Use the included launcher wrappers to make this look like a normal VS Code or VS Code Insiders flag:
+To show hint labels directly over the workbench, fully quit desktop VS Code and launch it with a local debugging port.
 
 ```sh
-./scripts/code --vim .
-./scripts/code-insiders --vim .
+code --remote-debugging-port=9333 .
 ```
 
-The wrappers remove `--vim` before launching VS Code and add `--remote-debugging-port=9333` internally. These forms are also accepted:
+Use `code-insiders` for VS Code Insiders. In a trusted workspace, run **Vimium: Show IDE Navigation Hints** or press the configured IDE hint key, then type a label to activate its control.
 
-```sh
-./scripts/code-insiders --vim=true .
-./scripts/code-insiders --vim=1 .
-./scripts/code-insiders --vim-port=9444 .
-```
-
-To make the command exactly `code-insiders --vim`, put this repository's `scripts/` directory before `/usr/bin` in your `PATH`, or symlink the wrapper into a directory that already comes first:
-
-```sh
-ln -sf /path/to/vs_code_vim/scripts/code-insiders ~/.local/bin/code-insiders
-ln -sf /path/to/vs_code_vim/scripts/code ~/.local/bin/code
-```
-
-The wrapper skips itself and delegates to the real `code` or `code-insiders` binary. Then run `Vimium: Show IDE Navigation Hints` or press the configured IDE hint key. If the endpoint is available, labels are drawn directly over visible workbench controls and typing a label dispatches a DOM click. If the endpoint is not available, the extension falls back to the supported command-backed IDE hint HUD/list.
-
-The experimental overlay runs in trusted workspaces. Keep its debugging endpoint on loopback. To use a custom port, set `vimiumCode.workbenchDomOverlayDebugPort` to the same number in User Settings. Fully quit VS Code before launching with a new port, or start it with a separate `--user-data-dir`. The supported picker works in Restricted Mode and with a normal VS Code launch.
+Keep the debugging endpoint on loopback. To use a custom port, set `vimiumCode.workbenchDomOverlayDebugPort` to the same number in User Settings. Fully quit VS Code before changing its launch flags, or start it with a separate `--user-data-dir`. VimCode uses the IDE hint picker when the endpoint is unavailable, including on a normal launch or in Restricted Mode.
 
 ## Settings
 
@@ -100,23 +135,3 @@ The experimental overlay runs in trusted workspaces. Keep its debugging endpoint
 - `vimiumCode.workbenchDomOverlayDebugPort`: local DevTools port for experimental direct workbench DOM labels. Default: `9333`.
 
 Choose at least two distinct ASCII letters or digits for the hint alphabet. VimCode ignores duplicates and uses the default alphabet if fewer than two supported characters remain.
-
-## Development
-
-Use Node.js 24 to install dependencies and run the tests.
-
-```sh
-npm ci
-npm test
-npm run test:ui
-```
-
-Use Node.js 24 for development. The tests launch a disposable desktop profile. On a headless Linux machine, prefix each test command with `xvfb-run -a`. Set `VSCODE_TEST_VERSION` to select a release or `VSCODE_EXECUTABLE_PATH` to use an installed Electron executable. See the [keyboard regression scenarios](https://github.com/mohsenhariri/vimcode/blob/main/test-fixtures/UI-SCENARIOS.md) for packaged and Codex runs.
-
-## Package
-
-```sh
-npm run vsix
-```
-
-The extension is bundled into `dist/extension.js` with `vscode` kept external, as required for VS Code extensions.
