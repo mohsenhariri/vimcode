@@ -84,10 +84,19 @@ exports.run = async function run() {
   const fixture = await vscode.extensions.getExtension("vimcode-tests.vimcode-ui-fixture").activate();
 
   async function focusDraft(webview) {
-    await until("the fixture draft to acquire keyboard focus", async () => {
-      await webview.postMessage("focusDraft");
-      return fixture.focusedWebview === webview;
+    let confirmed = false;
+    const listener = webview.onDidReceiveMessage(message => {
+      if (message.focusConfirmed) confirmed = true;
     });
+    try {
+      await until("the fixture draft to acquire keyboard focus", async () => {
+        if (confirmed) return true;
+        await webview.postMessage("focusDraft");
+        return false;
+      });
+    } finally {
+      listener.dispose();
+    }
   }
 
   function waitForEditorFocus() {
@@ -136,7 +145,8 @@ exports.run = async function run() {
 
     await openFromPalette();
     await ui.key("Escape");
-    await until("picker dismissed", async () => !await idePicker());
+    await until("picker dismissed", () => ui.evaluate(`!(${pickerVisible}) &&
+      !document.querySelector(".statusbar")?.textContent.includes("Vimium IDE:")`));
     assert.equal(fixture.latestInput, "fgjhkli");
     console.log("PASS UI webview editor typing, Command Palette and picker dismissal");
 
@@ -145,6 +155,7 @@ exports.run = async function run() {
       document.activeElement instanceof HTMLIFrameElement &&
       new URL(document.activeElement.src).searchParams.get("extensionId") === "vimcode-tests.vimcode-ui-fixture"
     `));
+    await focusDraft(panel.webview);
     await openFromPalette();
     await ui.key("ArrowDown");
     await until("Search selected", () => ui.evaluate(`${picker}.querySelector(".monaco-list-row.focused")?.textContent.includes("Search")`));
