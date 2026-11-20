@@ -1,0 +1,50 @@
+name: Test extension
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            vscode: "1.120.0"
+          - os: ubuntu-latest
+            vscode: stable
+          - os: macos-latest
+            vscode: stable
+          - os: windows-latest
+            vscode: stable
+    env:
+      VSCODE_TEST_VERSION: ${{ matrix.vscode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Run extension-host and launcher tests
+        if: runner.os != 'Linux'
+        run: npm test
+      - name: Run extension-host and launcher tests under Xvfb
+        if: runner.os == 'Linux'
+        run: env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run -a npm test
+      - name: Exercise the packaged extension in a fresh window
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          npm run vsix
+          packages=(*.vsix)
+          test "${#packages[@]}" -eq 1
+          unzip -t "${packages[0]}"
+          env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 VIMCODE_VSIX="${packages[0]}" xvfb-run -a node scripts/run-tests.js --ui

@@ -132,6 +132,24 @@ export const tests: readonly TestCase[] = [
     }
   },
   {
+    name: "ignores webviews and ordinary pages with a workbench-like title",
+    run() {
+      for (const url of [
+        "https://example.com/workbench.html",
+        "vscode-webview://fixture/index.html",
+        "vscode-file://vscode-app/out/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html"
+      ]) {
+        assert.equal(selectWorkbenchDevToolsTarget([{
+          id: "fixture",
+          type: "page",
+          title: "Visual Studio Code",
+          url,
+          webSocketDebuggerUrl: "ws://127.0.0.1:9333/devtools/page/fixture"
+        }], { workspaceNames: [] }), undefined);
+      }
+    }
+  },
+  {
     name: "selects a workbench DevTools target by current workspace hint",
     run() {
       const selectedTarget = selectWorkbenchDevToolsTarget(

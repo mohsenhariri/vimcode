@@ -1,72 +1,25 @@
-# Known Issues & Limitations
+# Compatibility notes
 
-These are inherent limitations of the VS Code extension API and of how other
-extensions handle the keyboard — not bugs in VimCode. They are documented here
-so the behavior is predictable.
+## Codex and other extension views
 
-## 1. Drawing hints over the IDE chrome requires launching with a debug port
+Run **Vimium: Show IDE Navigation Hints** from the Command Palette to navigate away from a webview. The standard palette shortcut is `F1`, `Ctrl+Shift+P` on Windows/Linux, or `Cmd+Shift+P` on macOS. Webviews control which shortcuts reach VS Code. Use the workbench menu to open the palette if a webview consumes your shortcut.
 
-VS Code's extension API **cannot draw over the workbench chrome** (Activity Bar,
-Side Bar, tabs, status bar). Editor decorations only work inside a text editor.
+The picker can focus the Codex sidebar, switch to an existing webview tab, or open VS Code’s **Open View…** picker. The experimental overlay can focus a visible webview frame. Controls inside that frame use the keyboard navigation supplied by the extension that owns it.
 
-The on-screen IDE overlay (labels drawn directly over those controls) is provided
-by an **experimental Chrome DevTools Protocol injection**, which only works when
-VS Code is launched with `--remote-debugging-port`:
+## Experimental workbench overlay
 
-```sh
-./scripts/code --vim .          # wrapper adds --remote-debugging-port=9333
-```
+A normal VS Code launch uses the IDE hint picker. For labels over the workbench, start desktop VS Code with a loopback debugging port and use a trusted workspace. Fully quit a running instance before changing its launch flags, or use a separate profile directory. In a multi-window session, ambiguous window titles can also cause VimCode to use the picker. [Launcher setup](README.md#experimental-direct-workbench-overlays)
 
-Without the debug port, IDE hints (`f` / `Shift+F` outside the editor, or
-command-mode / Command Palette) fall back to a searchable **Quick Pick list**
-instead of an overlay. Everything still works; it just isn't drawn on top of the
-chrome. See [README › Experimental Direct Workbench Overlays](README.md#experimental-direct-workbench-overlays).
+Workbench markup can change between VS Code releases. Native dropdowns and keyboard-only controls may receive focus and require another keystroke to open. Press `Esc` to dismiss labels or disable `vimiumCode.preferWorkbenchDomOverlay` in User Settings to always use the picker.
 
-The debug port is powerful — only enable it on a trusted machine, and never
-expose it beyond `localhost`.
+## Editor command mode
 
-## 2. Triggering hints from inside another extension's webview (e.g. chat panels)
+Command mode handles navigation and unassigned printable keys using VS Code’s keybinding service. IME composition, extension-issued edits and commands such as Paste use VS Code’s native editing paths. The `Esc` entry shortcut yields to VSCodeVim when it reports itself active. Use Keyboard Shortcuts to resolve customized bindings on your keyboard layout.
 
-Some extension UIs (OpenAI Codex, chat panels, etc.) render inside a **webview
-(iframe)**. A focused webview owns its keystrokes and only forwards *some* of
-them to VS Code:
+## Menu mnemonics
 
-- **Bare keys** can't be used — they'd type into that UI (so VimCode deliberately
-  ignores `f` there).
-- **`Alt` combos are swallowed by some webviews** (confirmed with OpenAI Codex),
-  so `Alt+J` never reaches VimCode.
-- An extension cannot capture a key a webview refuses to forward. This is a hard
-  boundary, not something VimCode can patch.
+Windows and Linux can reserve `Alt+F` for the File menu. VimCode uses `Alt+J` by default. Both hint commands can be rebound in Keyboard Shortcuts.
 
-**Mouse-free workaround:** webviews forward `Ctrl+Shift+P`, so use the Command
-Palette → **"Vimium: Show IDE Navigation Hints"**. VimCode takes focus from the
-webview and draws the overlay so you can type a label to jump out.
+## Terminal shortcuts
 
-`Esc`-then-`f` cannot work inside a webview: `Esc` belongs to the webview's own
-UI, and command mode requires a real text editor (`editorTextFocus`).
-
-## 3. `Alt+F` opens the File menu (menu mnemonic)
-
-On Windows/Linux, `Alt` + a menu letter (`F` File, `E` Edit, `S` Selection,
-`V` View, `G` Go, `R` Run, `T` Terminal, `H` Help) opens that menu, and the
-mnemonic is handled **before** extension keybindings. That is why VimCode binds
-hints to **`Alt+J`** (not a menu letter). To free an `Alt`+menu-letter for a
-keybinding, set `"window.enableMenuBarMnemonics": false` in your settings.
-
-## 4. Command mode is a lightweight emulation, not real Vim
-
-VS Code has no native modal/normal mode. VimCode's **command mode** (`Esc` to
-enter) is a small emulation: while active it owns the editor's `type` command
-(to suppress text insertion) and the `Esc` key, and shows a `-- COMMAND --`
-status-bar indicator. It is intentionally minimal — for full Vim emulation use a
-dedicated Vim extension alongside VimCode.
-
-## 5. DOM overlay activation caveats
-
-When the experimental overlay is active:
-
-- Native `<select>` dropdowns and some keyboard-only widgets only receive
-  **focus** when a label is chosen — browsers block opening them via synthetic
-  clicks. Use the keyboard once focused.
-- The overlay relies on workbench DOM class names, which can change between VS
-  Code versions; it is best-effort and clearly marked experimental.
+VimCode uses VS Code’s built-in `runCommands` binding for `Alt+J` in the terminal. If you have enabled `terminal.integrated.sendKeybindingsToShell` or added `-runCommands` to `terminal.integrated.commandsToSkipShell`, your shell can receive the shortcut instead. [VS Code terminal key routing](https://code.visualstudio.com/docs/terminal/advanced#_keyboard-shortcuts-and-the-shell)

@@ -1,0 +1,15 @@
+{
+  "name": "vimcode-ui-fixture",
+  "displayName": "VimCode UI fixture",
+  "publisher": "vimcode-tests",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.120.0" },
+  "main": "./index.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        { "type": "webview", "id": "vimcodeFixture.input", "name": "Fixture input" }
+      ]
+    }
+  }
+}

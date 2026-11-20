@@ -9,6 +9,7 @@ export const COMMANDS = {
   cancelHint: `${EXTENSION_NAMESPACE}.cancelHint`,
   enterCommandMode: `${EXTENSION_NAMESPACE}.enterCommandMode`,
   exitCommandMode: `${EXTENSION_NAMESPACE}.exitCommandMode`,
+  ignoreUnassignedKey: `${EXTENSION_NAMESPACE}.ignoreUnassignedKey`,
   scrollDown: `${EXTENSION_NAMESPACE}.scrollDown`,
   scrollUp: `${EXTENSION_NAMESPACE}.scrollUp`,
   pageDown: `${EXTENSION_NAMESPACE}.pageDown`,
@@ -44,6 +45,8 @@ export const COMMANDS = {
 
 export const CONTEXT_KEYS = {
   hintMode: `${EXTENSION_NAMESPACE}.hintMode`,
+  workbenchHintMode: `${EXTENSION_NAMESPACE}.workbenchHintMode`,
+  nativeModeSwitch: `${EXTENSION_NAMESPACE}.nativeModeSwitch`,
   commandMode: `${EXTENSION_NAMESPACE}.commandMode`
 } as const;
 

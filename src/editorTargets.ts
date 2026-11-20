@@ -35,7 +35,9 @@ function collectVisibleLocations(
   const document = editor.document;
   const locations: Omit<EditorHintTarget, "label">[] = [];
   const seenLines = new Set<number>();
-  const visibleRanges = editor.visibleRanges.length > 0 ? editor.visibleRanges : [editor.selection];
+  const visibleRanges = editor.visibleRanges.length > 0
+    ? editor.visibleRanges
+    : [new vscode.Range(editor.selection.active, editor.selection.active)];
 
   for (const visibleRange of visibleRanges) {
     const startLine = Math.max(0, visibleRange.start.line);
@@ -60,10 +62,6 @@ function collectVisibleLocations(
       const character = line.isEmptyOrWhitespace ? 0 : line.firstNonWhitespaceCharacterIndex;
       const range = createDecorationRange(line, character);
 
-      if (!range) {
-        continue;
-      }
-
       locations.push({
         line: lineNumber,
         character,
@@ -76,7 +74,7 @@ function collectVisibleLocations(
   return locations;
 }
 
-function createDecorationRange(line: vscode.TextLine, character: number): vscode.Range | undefined {
+function createDecorationRange(line: vscode.TextLine, character: number): vscode.Range {
   if (line.text.length === 0) {
     const position = new vscode.Position(line.lineNumber, 0);
 

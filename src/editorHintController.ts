@@ -10,6 +10,7 @@ import type { TypeHintCharacterArgs } from "./hintInput";
 interface HintSession {
   readonly editor: vscode.TextEditor;
   readonly targets: readonly EditorHintTarget[];
+  readonly visibleRanges: readonly vscode.Range[];
   readonly autoAcceptExactHint: boolean;
   prefix: string;
 }
@@ -33,8 +34,19 @@ export class EditorHintController implements vscode.Disposable {
       this.decorationType,
       this.statusBar,
       vscode.window.onDidChangeActiveTextEditor((editor) => this.cancelIfActiveEditorChanged(editor)),
-      vscode.window.onDidChangeTextEditorVisibleRanges((event) => this.cancelIfEditorMoved(event.textEditor)),
-      vscode.workspace.onDidChangeTextDocument((event) => this.cancelIfDocumentChanged(event.document))
+      vscode.window.onDidChangeWindowState(({ focused }) => {
+        if (!focused && this.session) {
+          void this.cancelHint();
+        }
+      }),
+      vscode.window.onDidChangeTextEditorVisibleRanges((event) => this.cancelIfEditorMoved(event)),
+      vscode.workspace.onDidChangeTextDocument((event) => {
+        // Dirty-state and language notifications can arrive after a hint opens;
+        // only text changes invalidate the snapshot of line targets.
+        if (event.contentChanges.length && this.session?.editor.document === event.document) {
+          void this.cancelHint();
+        }
+      })
     );
   }
 
@@ -50,18 +62,20 @@ export class EditorHintController implements vscode.Disposable {
       return;
     }
 
-    await this.cancelHint();
     const configuration = this.readConfiguration();
     const targets = collectEditorHintTargets(editor, configuration);
 
     if (targets.length === 0) {
-      await vscode.window.showInformationMessage("Vimium: no visible editor targets to hint.");
+      await this.cancelHint();
+      void vscode.window.setStatusBarMessage("VimCode: no visible editor lines to hint.", 1800);
       return;
     }
 
+    this.clearSession();
     this.session = {
       editor,
       targets,
+      visibleRanges: editor.visibleRanges,
       prefix: "",
       autoAcceptExactHint: configuration.autoAcceptExactHint
     };
@@ -134,10 +148,8 @@ export class EditorHintController implements vscode.Disposable {
 
   public async cancelHint(): Promise<void> {
     if (!this.session) {
-      await vscode.commands.executeCommand("setContext", CONTEXT_KEYS.hintMode, false);
       return;
     }
-
     this.clearSession();
     await vscode.commands.executeCommand("setContext", CONTEXT_KEYS.hintMode, false);
   }
@@ -173,17 +185,19 @@ export class EditorHintController implements vscode.Disposable {
     }
 
     const editor = session.editor;
+    const version = editor.document.version;
+    const resetContext = vscode.commands.executeCommand("setContext", CONTEXT_KEYS.hintMode, false);
     this.clearSession();
-    await vscode.commands.executeCommand("setContext", CONTEXT_KEYS.hintMode, false);
-    const activeEditor = await vscode.window.showTextDocument(editor.document, {
-      viewColumn: editor.viewColumn,
-      preserveFocus: false,
-      preview: false
-    });
-    const position = new vscode.Position(target.line, target.character);
+    await resetContext;
+    if (this.session || editor !== vscode.window.activeTextEditor || editor.document.version !== version) {
+      return;
+    }
 
-    activeEditor.selection = new vscode.Selection(position, position);
-    activeEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+    // Move the caret in the editor that owns the decorations. Reopening its
+    // document pins preview tabs and can open the source of a diff separately.
+    const position = new vscode.Position(target.line, target.character);
+    editor.selection = new vscode.Selection(position, position);
+    editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
   }
 
   private clearSession(): void {
@@ -201,14 +215,18 @@ export class EditorHintController implements vscode.Disposable {
     }
   }
 
-  private cancelIfEditorMoved(editor: vscode.TextEditor): void {
-    if (this.session && editor === this.session.editor) {
-      void this.cancelHint();
+  private cancelIfEditorMoved(event: vscode.TextEditorVisibleRangesChangeEvent): void {
+    const session = this.session;
+    if (!session || event.textEditor !== session.editor) {
+      return;
     }
-  }
 
-  private cancelIfDocumentChanged(document: vscode.TextDocument): void {
-    if (this.session && document === this.session.editor.document) {
+    // Adding or removing inline decorations can change the visible columns.
+    // Cancel only if a different set of lines is now on screen.
+    const previous = session.visibleRanges;
+    if (previous.length !== event.visibleRanges.length || event.visibleRanges.some((range, index) =>
+      range.start.line !== previous[index].start.line || range.end.line !== previous[index].end.line
+    )) {
       void this.cancelHint();
     }
   }

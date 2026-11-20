@@ -1,29 +1,30 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# macOS Bash 3.2 treats an empty argument array as unset under nounset.
+set -eo pipefail
 
 target="${1:-}"
 
-if [[ -z "$target" ]]; then
+if [[ "$target" != code && "$target" != code-insiders ]]; then
   echo "usage: vimium-code-launcher.sh <code|code-insiders> [--vim[=true|1|false|0]] [--vim-port=<port>] [args...]" >&2
   exit 2
 fi
 
 shift
 
-script_source="${BASH_SOURCE[0]}"
-
-if command -v readlink >/dev/null 2>&1; then
-  script_source="$(readlink -f "$script_source")"
-fi
-
-script_dir="$(cd -- "$(dirname -- "$script_source")" && pwd -P)"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 port="${VIMIUM_CODE_DEBUG_PORT:-9333}"
 enable_vim=false
 remote_debugging_present=false
 args=()
 
-for argument in "$@"; do
+while (( $# )); do
+  argument="$1"
+  shift
   case "$argument" in
+    --)
+      args+=("--" "$@")
+      break
+      ;;
     --vim | --vim=true | --vim=1 | --vim=yes | --vim=on)
       enable_vim=true
       ;;
@@ -48,33 +49,22 @@ for argument in "$@"; do
   esac
 done
 
-if [[ ! "$port" =~ ^[0-9]+$ ]] || ((port < 1 || port > 65535)); then
-  echo "Invalid Vimium debug port: $port" >&2
-  exit 2
-fi
-
 if [[ "$enable_vim" == true && "$remote_debugging_present" == false ]]; then
-  args=("--remote-debugging-port=$port" "${args[@]}")
+  if [[ ! "$port" =~ ^0*([1-9][0-9]{0,4})$ ]] || (( BASH_REMATCH[1] > 65535 )); then
+    echo "Invalid Vimium debug port: $port" >&2
+    exit 2
+  fi
+  args=("--remote-debugging-port=${BASH_REMATCH[1]}" "${args[@]}")
 fi
 
 real_command=""
 
 while IFS= read -r candidate; do
-  [[ -z "$candidate" ]] && continue
-
-  candidate_source="$candidate"
-
-  if command -v readlink >/dev/null 2>&1; then
-    candidate_source="$(readlink -f "$candidate_source")"
-  fi
-
-  candidate_dir="$(cd -- "$(dirname -- "$candidate_source")" 2>/dev/null && pwd -P || true)"
-
-  if [[ "$candidate_dir" != "$script_dir" ]]; then
+  if [[ -n "$candidate" && ! "$candidate" -ef "$script_dir/$target" ]]; then
     real_command="$candidate"
     break
   fi
-done < <(type -P -a "$target" 2>/dev/null | awk '!seen[$0]++')
+done < <(type -a -p "$target" 2>/dev/null)
 
 if [[ -z "$real_command" ]]; then
   echo "Could not find real $target on PATH." >&2

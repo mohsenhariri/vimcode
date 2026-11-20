@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.2 - 2026-11-19
+
+- Fixed `Alt+J` in the focused integrated terminal. It opens IDE navigation hints, and `Esc` returns to the terminal prompt.
+
+## 0.3.1 - 2026-11-19
+
+- Scoped keyboard navigation to the focused editor or workbench list and removed the global typing override, fixing lost keystrokes in extension views.
+- Added Codex and Open View targets to the IDE picker. Webview, terminal and preview editor tabs can be selected in place, including across editor groups.
+- Fixed overlapping hint sessions, native picker selection and overlay cancellation. The experimental overlay honors manual acceptance, checks the focused workbench and falls back on unusable endpoints.
+- Added isolated desktop keyboard scenarios, VSIX installation tests and portable launcher checks.
+
 ## 0.3.0 - 2026-06-16
 
 - Stopped activating editor hints from a bare `f` while editing. The editor is a text input, so plain `f` now types `f`.

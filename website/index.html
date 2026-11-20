@@ -68,7 +68,7 @@
 
       <div class="hero__inner">
         <a class="pill" href="#install">
-          <span class="pill__dot"></span> v0.3.0 · UI extension · MIT
+          <span class="pill__dot"></span> v0.3.2 · UI extension · MIT
         </a>
         <h1 class="hero__title">
           Drive VS&nbsp;Code from the<br />
@@ -89,7 +89,7 @@
             View cheatsheet
           </a>
         </div>
-        <p class="hero__hint"><kbd>Alt</kbd>+<kbd>J</kbd> in the editor &nbsp;·&nbsp; <kbd>f</kbd> anywhere else &nbsp;·&nbsp; <kbd>Esc</kbd> for command mode</p>
+        <p class="hero__hint"><kbd>Alt</kbd>+<kbd>J</kbd> in the editor &nbsp;·&nbsp; <kbd>f</kbd> in a list or tree &nbsp;·&nbsp; <kbd>Esc</kbd> for command mode</p>
       </div>
 
       <!-- product window -->
@@ -114,7 +114,7 @@
           <article class="mode">
             <div class="mode__kbd"><kbd>f</kbd></div>
             <h3>Anywhere else</h3>
-            <p>Side Bar, Activity Bar, panels, lists in focus? A bare <kbd>f</kbd> labels the IDE chrome.</p>
+            <p>Press <kbd>f</kbd> in a focused list, tree, or status bar to open IDE hints.</p>
           </article>
           <article class="mode">
             <div class="mode__kbd"><kbd>Esc</kbd></div>
@@ -241,7 +241,7 @@
           <!-- IDE / WORKBENCH -->
           <article class="sheet__card" data-cat="ide">
             <h3 class="sheet__title"><span class="dot" data-c="blue"></span>IDE &amp; workbench</h3>
-            <p class="sheet__when">Non-editor focus: Side Bar, Activity Bar, panels</p>
+            <p class="sheet__when">Focused workbench list, tree, or status bar</p>
             <ul class="rows">
               <li class="row"><span class="keys"><kbd>f</kbd> <span class="sep">/</span> <kbd>Shift</kbd><kbd>F</kbd></span><span class="act">Show IDE navigation hints</span></li>
               <li class="row"><span class="keys"><kbd>g</kbd><kbd>e</kbd></span><span class="act">Focus Explorer</span></li>
@@ -290,6 +290,7 @@
         <p class="sheet__empty" id="sheetEmpty" hidden>No bindings match your search.</p>
 
         <p class="sheet__foot reveal">
+          Press <kbd>Alt</kbd>+<kbd>J</kbd> in the terminal for IDE hints.
           Bare <kbd>f</kbd> / <kbd>Shift</kbd><kbd>F</kbd> deliberately stay quiet inside editors, inputs, the terminal and webviews, so they never swallow what you type.
           Rebind anything in <strong>Keyboard Shortcuts</strong> under the <code>vimiumCode.*</code> commands.
         </p>
@@ -314,9 +315,8 @@
 <span class="c-prompt">$</span> code-insiders --vim .         <span class="c-comment"># wrapper on your PATH</span></code></pre>
           </div>
           <p class="muted small">
-            No debug port? IDE hints gracefully fall back to a searchable Quick&nbsp;Pick list — everything
-            still works, it just isn't painted on top. The port is powerful: keep it on a trusted machine,
-            never beyond <code>localhost</code>.
+            A normal launch uses a Quick&nbsp;Pick with labels for tabs, terminals, Codex and workbench actions.
+            Use the experimental overlay in a trusted workspace with a loopback debugging port.
           </p>
         </div>
         <figure class="window overlay__shot reveal">
@@ -344,8 +344,8 @@
             <h3>From a VSIX</h3>
             <p>Grab the latest <code>.vsix</code> from Releases, then:</p>
             <div class="codeblock">
-              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="code --install-extension vimcode-0.3.0.vsix">Copy</button></div>
-              <pre><code><span class="c-prompt">$</span> code --install-extension vimcode-0.3.0.vsix</code></pre>
+              <div class="codeblock__bar"><span>shell</span><button class="copy" data-copy="code --install-extension vimcode-0.3.2.vsix">Copy</button></div>
+              <pre><code><span class="c-prompt">$</span> code --install-extension vimcode-0.3.2.vsix</code></pre>
             </div>
             <a class="btn btn--ghost btn--sm" href="https://github.com/mohsenhariri/vimcode/releases" target="_blank" rel="noopener">Releases →</a>
           </article>
@@ -370,7 +370,7 @@ cd vimcode && npm install && npm run vsix">Copy</button></div>
             <p>Open any file and try it:</p>
             <ul class="install__keys">
               <li><kbd>Alt</kbd><kbd>J</kbd> <span>line-jump hints in the editor</span></li>
-              <li><kbd>f</kbd> <span>IDE hints with the Side Bar focused</span></li>
+              <li><kbd>f</kbd> <span>IDE hints with the Explorer tree focused</span></li>
               <li><kbd>Esc</kbd> <span>enter command mode</span></li>
             </ul>
             <a class="btn btn--ghost btn--sm" href="#cheatsheet">Full cheatsheet →</a>

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import type { ExtensionConfiguration } from "./configuration";
@@ -26,6 +27,8 @@ interface PendingCdpRequest {
 interface WorkbenchDomOverlayOptions {
   readonly hintCharacters: string;
   readonly maxHints: number;
+  readonly sessionId: string;
+  readonly autoAcceptExactHint: boolean;
   /** Show hints even when a webview/iframe is focused, taking focus from it so labels can be typed. */
   readonly force?: boolean;
 }
@@ -36,49 +39,112 @@ export interface WorkbenchDevToolsTargetSelectionHints {
 
 const DEVTOOLS_REQUEST_TIMEOUT_MS = 400;
 const DEVTOOLS_EVAL_TIMEOUT_MS = 2000;
-const WORKBENCH_TARGET_PATTERN = /(?:vscode|workbench|Visual Studio Code)/i;
+const WORKBENCH_PATH = /\/out\/vs\/code\/electron-(?:sandbox|browser)\/workbench\/workbench\.html$/;
 
-export async function tryOpenWorkbenchDomOverlay(
-  configuration: ExtensionConfiguration,
-  force = false
-): Promise<boolean> {
-  if (!configuration.preferWorkbenchDomOverlay) {
-    return false;
+export class WorkbenchDomOverlayController {
+  private closeActive?: () => Promise<void>;
+
+  public async cancel(): Promise<void> {
+    await this.closeActive?.();
   }
 
-  const target = await findWorkbenchDevToolsTarget(configuration.workbenchDomOverlayDebugPort);
+  public async open(
+    configuration: ExtensionConfiguration,
+    force: boolean,
+    signal: AbortSignal
+  ): Promise<boolean> {
+    if (!configuration.preferWorkbenchDomOverlay || !vscode.workspace.isTrusted || signal.aborted) {
+      return false;
+    }
 
-  if (!target?.webSocketDebuggerUrl) {
-    return false;
-  }
+    let connection: CdpConnection | undefined;
+    let watchingOverlay = false;
 
-  let connection: CdpConnection | undefined;
+    try {
+      const port = configuration.workbenchDomOverlayDebugPort;
+      const target = await findWorkbenchDevToolsTarget(port);
 
-  try {
-    connection = await connectCdp(target.webSocketDebuggerUrl, DEVTOOLS_REQUEST_TIMEOUT_MS);
+      if (!target?.webSocketDebuggerUrl || !vscode.window.state.focused || signal.aborted) {
+        return false;
+      }
 
-    const result = await connection.send(
-      "Runtime.evaluate",
-      {
-        expression: createWorkbenchDomOverlayScript({
-          hintCharacters: configuration.hintCharacters,
-          maxHints: 350,
-          force
-        }),
-        awaitPromise: false,
-        userGesture: true
-      },
-      DEVTOOLS_EVAL_TIMEOUT_MS
-    );
+      const socketUrl = new URL(target.webSocketDebuggerUrl);
+      if (socketUrl.origin !== `ws://127.0.0.1:${port}` || socketUrl.username || socketUrl.password ||
+          socketUrl.pathname !== `/devtools/page/${target.id}`) {
+        return false;
+      }
 
-    return !hasCdpExceptionDetails(result);
-  } catch {
-    // A dead or half-open debug socket, a stale target URL, or a stalled
-    // evaluate should degrade gracefully to the supported Quick Pick fallback
-    // rather than hang the command or throw.
-    return false;
-  } finally {
-    connection?.dispose();
+      const socket = await connectCdp(socketUrl.href, DEVTOOLS_REQUEST_TIMEOUT_MS);
+      connection = socket;
+      if (signal.aborted) {
+        return false;
+      }
+
+      const sessionId = randomUUID();
+      let pendingClose: Promise<void> | undefined;
+      const closeOverlay = () => {
+        pendingClose ??= socket.send("Runtime.evaluate", {
+          expression: `if (document.getElementById("vimium-code-workbench-dom-overlay")?.dataset.session === ${JSON.stringify(sessionId)}) window.__vimiumCodeWorkbenchDomOverlayCleanup__?.()`
+        }).then(() => undefined, () => undefined);
+        return pendingClose;
+      };
+      this.closeActive = closeOverlay;
+      signal.addEventListener("abort", closeOverlay, { once: true });
+      try {
+        const response = await socket.send("Runtime.evaluate", {
+          expression: createWorkbenchDomOverlayScript({
+            hintCharacters: configuration.hintCharacters,
+            autoAcceptExactHint: configuration.autoAcceptExactHint,
+            maxHints: 350,
+            sessionId,
+            force
+          }),
+          userGesture: true
+        }, DEVTOOLS_EVAL_TIMEOUT_MS) as {
+          result?: { objectId?: string; subtype?: string; value?: boolean };
+          exceptionDetails?: unknown;
+        } | undefined;
+        if (!response || response.exceptionDetails || signal.aborted) {
+          return false;
+        }
+
+        // A focused webview ignored a bare binding. Leave keyboard focus there.
+        if (response.result?.value === true) {
+          return true;
+        }
+        const { objectId, subtype } = response.result ?? {};
+        if (!objectId || subtype !== "promise") {
+          return false;
+        }
+
+        watchingOverlay = true;
+        // The renderer resolves this promise when it removes the overlay. Keep
+        // the connection only while there is a session for this host to cancel.
+        void socket.send("Runtime.awaitPromise", { promiseObjectId: objectId }, 0)
+          .catch(() => undefined)
+          .finally(() => {
+            signal.removeEventListener("abort", closeOverlay);
+            if (this.closeActive === closeOverlay) this.closeActive = undefined;
+            socket.dispose();
+          });
+        return true;
+      } catch {
+        await closeOverlay();
+        return false;
+      } finally {
+        if (!watchingOverlay) {
+          if (this.closeActive === closeOverlay) this.closeActive = undefined;
+          await pendingClose;
+          signal.removeEventListener("abort", closeOverlay);
+        }
+      }
+    } catch {
+      return false;
+    } finally {
+      if (!watchingOverlay) {
+        connection?.dispose();
+      }
+    }
   }
 }
 
@@ -89,25 +155,17 @@ export function createWorkbenchDomOverlayScript(options: WorkbenchDomOverlayOpti
 }
 
 async function findWorkbenchDevToolsTarget(port: number): Promise<DevToolsTarget | undefined> {
-  let response: Response;
-
-  try {
-    response = await fetchWithTimeout(`http://127.0.0.1:${port}/json/list`, DEVTOOLS_REQUEST_TIMEOUT_MS);
-  } catch {
-    return undefined;
-  }
-
+  const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+    redirect: "error",
+    signal: AbortSignal.timeout(DEVTOOLS_REQUEST_TIMEOUT_MS)
+  });
   if (!response.ok) {
     return undefined;
   }
-
-  const targets = (await response.json()) as unknown;
-
-  if (!Array.isArray(targets)) {
-    return undefined;
-  }
-
-  return selectWorkbenchDevToolsTarget(targets.filter(isDevToolsTarget), getWorkbenchTargetSelectionHints());
+  const targets: unknown = await response.json();
+  return Array.isArray(targets)
+    ? selectWorkbenchDevToolsTarget(targets.filter(isDevToolsTarget), getWorkbenchTargetSelectionHints())
+    : undefined;
 }
 
 export function selectWorkbenchDevToolsTarget(
@@ -118,7 +176,7 @@ export function selectWorkbenchDevToolsTarget(
     (target) =>
       target.type === "page" &&
       Boolean(target.webSocketDebuggerUrl) &&
-      (WORKBENCH_TARGET_PATTERN.test(target.url ?? "") || WORKBENCH_TARGET_PATTERN.test(target.title ?? ""))
+      isWorkbenchUrl(target.url)
   );
 
   if (workbenchTargets.length <= 1) {
@@ -138,6 +196,14 @@ export function selectWorkbenchDevToolsTarget(
   });
 
   return matchingTargets.length === 1 ? matchingTargets[0] : undefined;
+}
+
+function isWorkbenchUrl(value?: string): boolean {
+  if (!value || !URL.canParse(value)) {
+    return false;
+  }
+  const url = new URL(value);
+  return url.protocol === "vscode-file:" && url.hostname === "vscode-app" && WORKBENCH_PATH.test(url.pathname);
 }
 
 function getWorkbenchTargetSelectionHints(): WorkbenchDevToolsTargetSelectionHints {
@@ -181,20 +247,8 @@ function isDevToolsTarget(value: unknown): value is DevToolsTarget {
 
   const target = value as Partial<DevToolsTarget>;
 
-  return typeof target.id === "string";
-}
-
-async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, {
-      signal: controller.signal
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
+  return typeof target.id === "string" && typeof target.url === "string" &&
+    typeof target.webSocketDebuggerUrl === "string" && (target.title === undefined || typeof target.title === "string");
 }
 
 async function connectCdp(url: string, timeoutMs: number): Promise<CdpConnection> {
@@ -247,6 +301,9 @@ class CdpConnection {
     params: Record<string, unknown>,
     timeoutMs: number = DEVTOOLS_REQUEST_TIMEOUT_MS
   ): Promise<unknown> {
+    if (this.socket.readyState !== WebSocket.OPEN) {
+      throw new Error("VS Code DevTools connection is closed");
+    }
     const id = this.nextId;
 
     this.nextId += 1;
@@ -259,11 +316,11 @@ class CdpConnection {
     );
 
     return await new Promise<unknown>((resolve, reject) => {
-      const timer = setTimeout(() => {
+      const timer = timeoutMs > 0 ? setTimeout(() => {
         if (this.pending.delete(id)) {
           reject(new Error(`VS Code DevTools request "${method}" timed out`));
         }
-      }, timeoutMs);
+      }, timeoutMs) : undefined;
 
       this.pending.set(id, {
         resolve: (value) => {
@@ -332,15 +389,11 @@ function parseCdpResponse(data: unknown): CdpResponse {
   return {};
 }
 
-function hasCdpExceptionDetails(value: unknown): boolean {
-  if (typeof value !== "object" || value === null) {
+function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): boolean | Promise<void> {
+  if (!document.hasFocus() || !document.querySelector(".monaco-workbench")) {
     return false;
   }
 
-  return "exceptionDetails" in value;
-}
-
-function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
   type HintTarget = {
     readonly element: HTMLElement;
     readonly label: string;
@@ -364,22 +417,14 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
 
   const activeElement = document.activeElement;
 
-  if (activeElement instanceof HTMLIFrameElement) {
-    // Keyboard focus is inside a webview/iframe (another extension's panel,
-    // chat UI, etc.). On an accidental bare key, do not draw hints over it.
-    // When explicitly requested (force), take focus from the webview so the
-    // overlay can receive the typed label.
-    if (!options.force) {
-      return;
-    }
-
-    activeElement.blur();
+  if (activeElement instanceof HTMLIFrameElement && !options.force) {
+    return true;
   }
 
   const targets = collectTargets();
 
   if (targets.length === 0) {
-    return;
+    return false;
   }
 
   let prefix = "";
@@ -387,6 +432,11 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
   const labels = new Map<HintTarget, HTMLDivElement>();
 
   overlay.id = overlayId;
+  overlay.dataset.session = options.sessionId;
+  overlay.tabIndex = -1;
+  overlay.setAttribute("role", "group");
+  overlay.setAttribute("aria-label", "VimCode navigation hints");
+  overlay.style.outline = "none";
   overlay.style.position = "fixed";
   overlay.style.inset = "0";
   overlay.style.zIndex = "2147483647";
@@ -418,15 +468,38 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
     labels.set(target, label);
   }
 
-  const cleanup = () => {
-    window.removeEventListener("keydown", onKeyDown, true);
-    overlay.remove();
-    delete (window as unknown as Record<string, unknown>)[cleanupKey];
-  };
+  return new Promise<void>((resolve) => {
+    function dismiss(): void {
+      cleanup();
+      if (activeElement instanceof HTMLElement && activeElement.isConnected) {
+        activeElement.focus({ preventScroll: true });
+      }
+    }
+    function cleanup(): void {
+      window.removeEventListener("keydown", keydown, true);
+      window.removeEventListener("pointerdown", cleanup, true);
+      window.removeEventListener("blur", cleanup);
+      window.removeEventListener("resize", dismiss);
+      window.removeEventListener("scroll", dismiss, true);
+      overlay.removeEventListener("blur", cleanup);
+      overlay.remove();
+      delete (window as unknown as Record<string, unknown>)[cleanupKey];
+      resolve();
+    }
+    function keydown(event: KeyboardEvent): void {
+      onKeyDown(event, cleanup, dismiss);
+    }
 
-  (window as unknown as Record<string, unknown>)[cleanupKey] = cleanup;
-  window.addEventListener("keydown", onKeyDown, true);
-  render();
+    (window as unknown as Record<string, unknown>)[cleanupKey] = dismiss;
+    overlay.focus({ preventScroll: true });
+    overlay.addEventListener("blur", cleanup);
+    window.addEventListener("keydown", keydown, true);
+    window.addEventListener("pointerdown", cleanup, true);
+    window.addEventListener("blur", cleanup);
+    window.addEventListener("resize", dismiss);
+    window.addEventListener("scroll", dismiss, true);
+    render();
+  });
 
   function collectTargets(): HintTarget[] {
     const candidates = Array.from(
@@ -437,6 +510,7 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
           ".part.sidebar .action-label",
           ".part.panel .action-label",
           ".statusbar-item",
+          "iframe.webview",
           ".monaco-list-row",
           "a[href]",
           "button",
@@ -460,7 +534,7 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
         break;
       }
 
-      if (!isUsableTarget(candidate)) {
+      if (!(candidate instanceof HTMLElement) || !isUsableTarget(candidate)) {
         continue;
       }
 
@@ -493,7 +567,7 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
       return false;
     }
 
-    if (element.getAttribute("aria-hidden") === "true") {
+    if (element.closest('[aria-hidden="true"], [inert]') || element.matches(':disabled, [aria-disabled="true"]')) {
       return false;
     }
 
@@ -549,16 +623,20 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
     return label.join("");
   }
 
-  function onKeyDown(event: KeyboardEvent): void {
+  function onKeyDown(event: KeyboardEvent, cleanup: () => void, dismiss: () => void): void {
     const key = event.key.toLowerCase();
 
-    if (event.altKey || event.ctrlKey || event.metaKey) {
+    if (["alt", "control", "shift", "meta"].includes(key)) {
+      return;
+    }
+    if (event.altKey || event.ctrlKey || event.metaKey || key === "tab") {
+      dismiss();
       return;
     }
 
     if (key === "escape") {
       stop(event);
-      cleanup();
+      dismiss();
       return;
     }
 
@@ -571,11 +649,12 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
 
     if (key === "enter") {
       stop(event);
-      acceptBestMatch();
+      acceptBestMatch(cleanup);
       return;
     }
 
     if (!alphabet.includes(key)) {
+      stop(event);
       return;
     }
 
@@ -591,21 +670,21 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
     prefix = nextPrefix;
     const exactTarget = matchingTargets.find((target) => target.label === prefix);
 
-    if (exactTarget) {
-      activate(exactTarget);
+    if (exactTarget && options.autoAcceptExactHint) {
+      activate(exactTarget, cleanup);
       return;
     }
 
     render();
   }
 
-  function acceptBestMatch(): void {
+  function acceptBestMatch(cleanup: () => void): void {
     const matchingTargets = getMatchingTargets(prefix);
     const exactTarget = matchingTargets.find((target) => target.label === prefix);
     const target = exactTarget ?? (matchingTargets.length === 1 ? matchingTargets[0] : undefined);
 
     if (target) {
-      activate(target);
+      activate(target, cleanup);
     }
   }
 
@@ -636,9 +715,13 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
     return value.length === 0 ? targets : targets.filter((target) => target.label.startsWith(value));
   }
 
-  function activate(target: HintTarget): void {
+  function activate(target: HintTarget, cleanup: () => void): void {
     const element = target.element;
-    const rect = target.rect;
+    if (!element.isConnected || !isUsableTarget(element)) {
+      cleanup();
+      return;
+    }
+    const rect = element.getBoundingClientRect();
     const clientX = rect.left + Math.min(rect.width / 2, 24);
     const clientY = rect.top + Math.min(rect.height / 2, 16);
 
@@ -646,6 +729,9 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
     element.focus({
       preventScroll: true
     });
+    if (element instanceof HTMLIFrameElement) {
+      return;
+    }
     dispatchMouse(element, "pointerdown", clientX, clientY);
     dispatchMouse(element, "mousedown", clientX, clientY);
     dispatchMouse(element, "pointerup", clientX, clientY);
@@ -654,7 +740,8 @@ function runWorkbenchDomOverlay(options: WorkbenchDomOverlayOptions): void {
   }
 
   function dispatchMouse(element: HTMLElement, type: string, clientX: number, clientY: number): void {
-    const event = new MouseEvent(type, {
+    const EventType = type.startsWith("pointer") ? PointerEvent : MouseEvent;
+    const event = new EventType(type, {
       bubbles: true,
       cancelable: true,
       button: 0,

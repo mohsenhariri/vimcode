@@ -2,16 +2,17 @@ import * as vscode from "vscode";
 import { COMMANDS } from "./constants";
 import { getExtensionConfiguration } from "./configuration";
 import { CommandModeController } from "./commandModeController";
-import type { ExitCommandModeArgs } from "./commandModeController";
+import type { CommandModeArgs, ExitCommandModeArgs } from "./commandModeController";
 import { EditorHintController } from "./editorHintController";
 import { executeBuiltInCommand } from "./vscodeCommands";
-import { tryOpenWorkbenchDomOverlay } from "./workbenchDomOverlay";
+import { WorkbenchDomOverlayController } from "./workbenchDomOverlay";
 import { WorkbenchHintController } from "./workbenchHints";
 
 export { COMMANDS } from "./constants";
 export { collectEditorHintTargets } from "./editorTargets";
 export { generateHintLabels, normalizeHintCharacters } from "./labels";
 export {
+  WorkbenchHintController,
   collectWorkbenchHintTargets,
   createEditorTabHintTargets,
   createWorkbenchHintItems,
@@ -23,42 +24,59 @@ export function activate(context: vscode.ExtensionContext): void {
   const hintController = new EditorHintController();
   const workbenchHintController = new WorkbenchHintController();
   const commandModeController = new CommandModeController();
-  let warnedOverlayUnavailable = false;
+  const overlay = new WorkbenchDomOverlayController();
+  let hintRequest: AbortController | undefined;
+
+  function beginHintRequest(): AbortSignal {
+    hintRequest?.abort();
+    hintRequest = new AbortController();
+    return hintRequest.signal;
+  }
 
   context.subscriptions.push(
+    { dispose: () => hintRequest?.abort() },
     hintController,
     workbenchHintController,
     commandModeController,
-    vscode.commands.registerCommand(COMMANDS.enterCommandMode, () => commandModeController.enter()),
+    // The command's manifest enablement scopes these keys to the focused document editor.
+    vscode.commands.registerCommand(COMMANDS.ignoreUnassignedKey, () => undefined),
+    vscode.commands.registerCommand(COMMANDS.enterCommandMode, (args?: CommandModeArgs) => commandModeController.enter(args)),
     vscode.commands.registerCommand(COMMANDS.exitCommandMode, (args: ExitCommandModeArgs | undefined) =>
       commandModeController.exitWith(args)
     ),
-    vscode.commands.registerCommand(COMMANDS.enterHintMode, async () => {
-      await commandModeController.exit();
-      await workbenchHintController.cancelHint();
-      await hintController.enterHintMode();
+    vscode.commands.registerCommand(COMMANDS.enterHintMode, async (args?: { editorFocused?: boolean }) => {
+      const signal = beginHintRequest();
+      // After a palette invocation, VS Code restores focus to its previous
+      // control, which can be a search field or a sidebar webview.
+      const focusEditor = args?.editorFocused !== true && vscode.window.activeTextEditor !== undefined;
+      await Promise.all([overlay.cancel(), commandModeController.exit(), workbenchHintController.cancelHint()]);
+      if (!signal.aborted && focusEditor) {
+        await vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
+      }
+      if (!signal.aborted) {
+        await hintController.enterHintMode();
+      }
     }),
     vscode.commands.registerCommand(COMMANDS.openWorkbenchHints, async (args?: { force?: boolean }) => {
-      await hintController.cancelHint();
+      const signal = beginHintRequest();
+      await Promise.all([
+        overlay.cancel(),
+        commandModeController.exit(),
+        hintController.cancelHint(),
+        workbenchHintController.cancelHint()
+      ]);
+      if (signal.aborted) {
+        return;
+      }
       const configuration = getExtensionConfiguration();
       // Default to taking focus from a focused webview (e.g. when run from the
       // Command Palette while a chat panel is focused). The bare-key bindings
       // pass force:false so an accidental key never overrides a webview.
       const force = args?.force !== false;
 
-      if (await tryOpenWorkbenchDomOverlay(configuration, force)) {
-        return;
+      if (!(await overlay.open(configuration, force, signal)) && !signal.aborted) {
+        await workbenchHintController.openHints(configuration);
       }
-
-      if (configuration.preferWorkbenchDomOverlay && !warnedOverlayUnavailable) {
-        warnedOverlayUnavailable = true;
-        void vscode.window.setStatusBarMessage(
-          `$(info) VimCode: launch with \`--remote-debugging-port=${configuration.workbenchDomOverlayDebugPort}\` (e.g. "code --vim") to draw IDE hints over the workbench. Showing the list for now.`,
-          6000
-        );
-      }
-
-      await workbenchHintController.openHints(configuration);
     }),
     vscode.commands.registerCommand(COMMANDS.typeHintCharacter, (args) =>
       workbenchHintController.isActive ? workbenchHintController.typeHintCharacter(args) : hintController.typeHintCharacter(args)
@@ -74,8 +92,8 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.commands.registerCommand(COMMANDS.cancelHint, async () => {
-      await hintController.cancelHint();
-      await workbenchHintController.cancelHint();
+      hintRequest?.abort();
+      await Promise.all([overlay.cancel(), hintController.cancelHint(), workbenchHintController.cancelHint()]);
     }),
     vscode.commands.registerCommand(COMMANDS.scrollDown, () => scrollEditor("down", "line")),
     vscode.commands.registerCommand(COMMANDS.scrollUp, () => scrollEditor("up", "line")),

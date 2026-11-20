@@ -1,9 +1,11 @@
+import { hintTests } from "./hints.test";
+import { commandModeTests } from "./commandMode.test";
 import { tests } from "./extension.test";
 
 export async function run(): Promise<void> {
   const failures: string[] = [];
 
-  for (const test of tests) {
+  for (const test of [...tests, ...hintTests, ...commandModeTests]) {
     try {
       await test.run();
       console.log(`PASS ${test.name}`);

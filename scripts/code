@@ -3,9 +3,14 @@ set -euo pipefail
 
 script_source="${BASH_SOURCE[0]}"
 
-if command -v readlink >/dev/null 2>&1; then
-  script_source="$(readlink -f "$script_source")"
-fi
+while [[ -L "$script_source" ]]; do
+  link_target="$(readlink "$script_source")"
+  if [[ "$link_target" == /* ]]; then
+    script_source="$link_target"
+  else
+    script_source="$(dirname -- "$script_source")/$link_target"
+  fi
+done
 
 script_dir="$(cd -- "$(dirname -- "$script_source")" && pwd -P)"
 

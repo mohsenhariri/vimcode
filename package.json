@@ -2,7 +2,7 @@
   "name": "vimcode",
   "displayName": "VimCode",
   "description": "Keyboard-first editor and IDE navigation hints for VS Code, inspired by Vimium.",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "publisher": "harimo",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -43,7 +43,11 @@
     "LICENSE"
   ],
   "main": "./dist/extension.js",
+  "vsce": {
+    "dependencies": false
+  },
   "activationEvents": [
+    "onStartupFinished",
     "onCommand:vimiumCode.enterHintMode",
     "onCommand:vimiumCode.openWorkbenchHints",
     "onCommand:vimiumCode.typeHintCharacter",
@@ -82,7 +86,8 @@
     "onCommand:vimiumCode.focusStatusBar",
     "onCommand:vimiumCode.toggleSideBar",
     "onCommand:vimiumCode.togglePanel",
-    "onCommand:vimiumCode.toggleTerminal"
+    "onCommand:vimiumCode.toggleTerminal",
+    "onCommand:vimiumCode.ignoreUnassignedKey"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -105,7 +110,8 @@
       {
         "command": "vimiumCode.typeHintCharacter",
         "title": "Type Hint Character",
-        "category": "Vimium"
+        "category": "Vimium",
+        "enablement": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.acceptHint",
@@ -286,6 +292,12 @@
         "command": "vimiumCode.toggleTerminal",
         "title": "Toggle Terminal",
         "category": "Vimium"
+      },
+      {
+        "command": "vimiumCode.ignoreUnassignedKey",
+        "title": "Ignore Unassigned Navigation Key",
+        "category": "Vimium",
+        "enablement": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && (vimiumCode.commandMode || vimiumCode.hintMode)"
       }
     ],
     "menus": {
@@ -309,14 +321,126 @@
         {
           "command": "vimiumCode.exitCommandMode",
           "when": "false"
+        },
+        {
+          "command": "vimiumCode.ignoreUnassignedKey",
+          "when": "false"
         }
       ]
     },
     "keybindings": [
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+a" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "b" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+b" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "c" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+c" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "d" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+d" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "e" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+e" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+h" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+i" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+j" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+k" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+l" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "m" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+m" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "n" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+n" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+o" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "p" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+p" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "q" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+q" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "r" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+r" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "s" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+s" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "t" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+t" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "u" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+u" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "v" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+v" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "w" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+w" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "x" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+x" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "y" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+y" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "z" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+z" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "0" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+0" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "1" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+1" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "2" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+2" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "3" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+3" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "4" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+4" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "5" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+5" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "6" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+6" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "7" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+7" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "8" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+8" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "9" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+9" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Semicolon]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Semicolon]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Equal]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Equal]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Comma]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Comma]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Minus]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Minus]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Period]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Period]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Slash]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Slash]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Backquote]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Backquote]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[BracketLeft]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[BracketLeft]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Backslash]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Backslash]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[BracketRight]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[BracketRight]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[Quote]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[Quote]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[IntlBackslash]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[IntlBackslash]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[IntlRo]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[IntlRo]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "[IntlYen]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+[IntlYen]" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "space" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "shift+space" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "enter" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "delete" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad0" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad1" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad2" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad3" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad4" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad5" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad6" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad7" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad8" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad9" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad_add" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad_subtract" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad_divide" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad_multiply" },
+      { "command": "vimiumCode.ignoreUnassignedKey", "key": "numpad_decimal" },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "f",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode",
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused",
         "args": {
           "force": false
         }
@@ -324,7 +448,7 @@
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "shift+f",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode",
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused",
         "args": {
           "force": false
         }
@@ -332,465 +456,360 @@
       {
         "command": "vimiumCode.enterHintMode",
         "key": "alt+j",
-        "when": "editorTextFocus && !vimiumCode.hintMode"
+        "args": {
+          "editorFocused": true
+        },
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "alt+j",
-        "when": "webviewId && !vimiumCode.hintMode",
+        "when": "!editorTextFocus && !inQuickOpen && !terminalFocus",
         "args": {
           "force": true
         }
       },
       {
+        "command": "runCommands",
+        "key": "alt+j",
+        "when": "terminalFocus && !inQuickOpen",
+        "args": {
+          "commands": ["vimiumCode.openWorkbenchHints"]
+        }
+      },
+      {
         "command": "vimiumCode.enterCommandMode",
         "key": "escape",
-        "when": "editorTextFocus && !vimiumCode.commandMode && !vimiumCode.hintMode && !suggestWidgetVisible && !parameterHintsVisible && !renameInputVisible && !inSnippetMode && !findWidgetVisible && !referenceSearchVisible && !inlineSuggestionVisible && !editorHasSelection && !editorHasMultipleSelections"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && !vimiumCode.commandMode && !vimiumCode.hintMode && !suggestWidgetVisible && !parameterHintsVisible && !renameInputVisible && !inSnippetMode && !findWidgetVisible && !referenceSearchVisible && !inlineSuggestionVisible && !editorHasSelection && !editorHasMultipleSelections && !vim.active && !isComposing && !inlineEditIsVisible && !inlineChatFocused && !notebookEditorFocused && !editorHoverVisible && !vimiumCode.nativeModeSwitch"
+      },
+      {
+        "command": "runCommands",
+        "key": "escape",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && !vimiumCode.commandMode && !vimiumCode.hintMode && !suggestWidgetVisible && !parameterHintsVisible && !renameInputVisible && !inSnippetMode && !findWidgetVisible && !referenceSearchVisible && !inlineSuggestionVisible && !editorHasSelection && !editorHasMultipleSelections && !vim.active && !isComposing && !inlineEditIsVisible && !inlineChatFocused && !notebookEditorFocused && !editorHoverVisible && vimiumCode.nativeModeSwitch",
+        "args": {
+          "commands": [
+            {
+              "command": "_setContext",
+              "args": [
+                "vimiumCode.commandMode",
+                true
+              ]
+            },
+            {
+              "command": "vimiumCode.enterCommandMode",
+              "args": {
+                "contextSet": true
+              }
+            }
+          ]
+        }
       },
       {
         "command": "vimiumCode.exitCommandMode",
         "key": "escape",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && !vimiumCode.nativeModeSwitch"
+      },
+      {
+        "command": "runCommands",
+        "key": "escape",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && vimiumCode.nativeModeSwitch",
+        "args": {
+          "commands": [
+            {
+              "command": "_setContext",
+              "args": [
+                "vimiumCode.commandMode",
+                false
+              ]
+            },
+            {
+              "command": "vimiumCode.exitCommandMode",
+              "args": {
+                "contextSet": true
+              }
+            }
+          ]
+        }
       },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "f",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.openWorkbenchHints",
         "key": "shift+f",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.enterHintMode",
         "key": "g f",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "args": {
+          "editorFocused": true
+        },
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.exitCommandMode",
         "key": "i",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && !vimiumCode.nativeModeSwitch"
+      },
+      {
+        "command": "runCommands",
+        "key": "i",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && vimiumCode.nativeModeSwitch",
+        "args": {
+          "commands": [
+            {
+              "command": "_setContext",
+              "args": [
+                "vimiumCode.commandMode",
+                false
+              ]
+            },
+            {
+              "command": "vimiumCode.exitCommandMode",
+              "args": {
+                "contextSet": true
+              }
+            }
+          ]
+        }
       },
       {
         "command": "vimiumCode.exitCommandMode",
         "key": "a",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && !vimiumCode.nativeModeSwitch",
         "args": {
           "action": "cursorRight"
         }
       },
       {
+        "command": "runCommands",
+        "key": "a",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && vimiumCode.nativeModeSwitch",
+        "args": {
+          "commands": [
+            {
+              "command": "_setContext",
+              "args": [
+                "vimiumCode.commandMode",
+                false
+              ]
+            },
+            "cursorRight",
+            {
+              "command": "vimiumCode.exitCommandMode",
+              "args": {
+                "contextSet": true
+              }
+            }
+          ]
+        }
+      },
+      {
         "command": "vimiumCode.exitCommandMode",
         "key": "o",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && !vimiumCode.nativeModeSwitch",
         "args": {
           "action": "editor.action.insertLineAfter"
         }
       },
       {
+        "command": "runCommands",
+        "key": "o",
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode && vimiumCode.nativeModeSwitch",
+        "args": {
+          "commands": [
+            {
+              "command": "_setContext",
+              "args": [
+                "vimiumCode.commandMode",
+                false
+              ]
+            },
+            "editor.action.insertLineAfter",
+            {
+              "command": "vimiumCode.exitCommandMode",
+              "args": {
+                "contextSet": true
+              }
+            }
+          ]
+        }
+      },
+      {
         "command": "cursorLeft",
         "key": "h",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "cursorDown",
         "key": "j",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "cursorUp",
         "key": "k",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "cursorRight",
         "key": "l",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "cursorLeft",
         "key": "backspace",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.goToTop",
         "key": "g g",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.goToBottom",
         "key": "shift+g",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.cancelHint",
         "key": "escape",
-        "when": "vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.acceptHint",
         "key": "enter",
-        "when": "vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.backspaceHint",
         "key": "backspace",
-        "when": "vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.scrollDown",
         "key": "ctrl+d",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.scrollUp",
         "key": "ctrl+u",
-        "when": "editorTextFocus && vimiumCode.commandMode && !vimiumCode.hintMode"
+        "when": "editorTextFocus && !focusedView && !inChatInput && !isInEmbeddedEditor && !inQuickOpen && vimiumCode.commandMode && !vimiumCode.hintMode"
       },
       {
         "command": "vimiumCode.listFocusDown",
         "key": "j",
-        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "listFocus && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.listFocusUp",
         "key": "k",
-        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "listFocus && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.listCollapse",
         "key": "h",
-        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "listFocus && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.listExpand",
         "key": "l",
-        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
-      },
-      {
-        "command": "vimiumCode.listSelect",
-        "key": "enter",
-        "when": "listFocus && !editorTextFocus && !inputFocus && !vimiumCode.hintMode"
+        "when": "listFocus && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.focusExplorer",
         "key": "g e",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.focusSearch",
         "key": "g s",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.focusSourceControl",
         "key": "g c",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.focusRunAndDebug",
         "key": "g r",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.focusExtensions",
         "key": "g x",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
       {
         "command": "vimiumCode.toggleTerminal",
         "key": "g t",
-        "when": "!editorTextFocus && !editorAreaFocus && !inputFocus && !terminalFocus && !webviewId && !vimiumCode.hintMode"
+        "when": "(listFocus || statusBarFocused) && !inputFocus && !editorTextFocus && !inQuickOpen && !terminalFocus && !notebookEditorFocused"
       },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "a",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "a"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "b",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "b"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "c",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "c"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "d",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "d"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "e",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "e"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "f",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "f"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "g",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "g"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "h",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "h"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "i",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "i"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "j",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "j"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "k",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "k"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "l",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "l"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "m",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "m"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "n",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "n"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "o",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "o"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "p",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "p"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "q",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "q"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "r",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "r"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "s",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "s"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "t",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "t"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "u",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "u"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "v",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "v"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "w",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "w"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "x",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "x"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "y",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "y"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "z",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "z"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "0",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "0"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "1",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "1"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "2",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "2"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "3",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "3"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "4",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "4"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "5",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "5"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "6",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "6"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "7",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "7"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "8",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "8"
-        }
-      },
-      {
-        "command": "vimiumCode.typeHintCharacter",
-        "key": "9",
-        "when": "vimiumCode.hintMode",
-        "args": {
-          "character": "9"
-        }
-      }
+      { "command": "vimiumCode.typeHintCharacter", "key": "a", "args": { "character": "a" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "b", "args": { "character": "b" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "c", "args": { "character": "c" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "d", "args": { "character": "d" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "e", "args": { "character": "e" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "f", "args": { "character": "f" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "g", "args": { "character": "g" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "h", "args": { "character": "h" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "i", "args": { "character": "i" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "j", "args": { "character": "j" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "k", "args": { "character": "k" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "l", "args": { "character": "l" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "m", "args": { "character": "m" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "n", "args": { "character": "n" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "o", "args": { "character": "o" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "p", "args": { "character": "p" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "q", "args": { "character": "q" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "r", "args": { "character": "r" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "s", "args": { "character": "s" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "t", "args": { "character": "t" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "u", "args": { "character": "u" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "v", "args": { "character": "v" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "w", "args": { "character": "w" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "x", "args": { "character": "x" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "y", "args": { "character": "y" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "z", "args": { "character": "z" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "0", "args": { "character": "0" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "1", "args": { "character": "1" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "2", "args": { "character": "2" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "3", "args": { "character": "3" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "4", "args": { "character": "4" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "5", "args": { "character": "5" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "6", "args": { "character": "6" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "7", "args": { "character": "7" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "8", "args": { "character": "8" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "9", "args": { "character": "9" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+a", "args": { "character": "a" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+b", "args": { "character": "b" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+c", "args": { "character": "c" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+d", "args": { "character": "d" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+e", "args": { "character": "e" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+f", "args": { "character": "f" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+g", "args": { "character": "g" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+h", "args": { "character": "h" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+i", "args": { "character": "i" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+j", "args": { "character": "j" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+k", "args": { "character": "k" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+l", "args": { "character": "l" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+m", "args": { "character": "m" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+n", "args": { "character": "n" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+o", "args": { "character": "o" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+p", "args": { "character": "p" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+q", "args": { "character": "q" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+r", "args": { "character": "r" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+s", "args": { "character": "s" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+t", "args": { "character": "t" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+u", "args": { "character": "u" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+v", "args": { "character": "v" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+w", "args": { "character": "w" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+x", "args": { "character": "x" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+y", "args": { "character": "y" } },
+      { "command": "vimiumCode.typeHintCharacter", "key": "shift+z", "args": { "character": "z" } }
     ],
     "configuration": {
       "title": "Vimium for VS Code",
@@ -819,11 +838,13 @@
           "description": "Jump immediately after the typed hint exactly matches a target label."
         },
         "vimiumCode.preferWorkbenchDomOverlay": {
+          "scope": "machine",
           "type": "boolean",
           "default": true,
           "description": "Try experimental Vimium-style DOM labels over the VS Code workbench when VS Code is launched with the configured remote debugging port. Falls back to the supported IDE hint list when unavailable."
         },
         "vimiumCode.workbenchDomOverlayDebugPort": {
+          "scope": "machine",
           "type": "integer",
           "default": 9333,
           "minimum": 1,
@@ -841,19 +862,25 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "test": "npm run compile && node scripts/run-tests.js",
-    "vsix": "npm run package && vsce package",
+    "test": "npm run compile && node --test scripts/test-launchers.js && node scripts/run-tests.js",
+    "test:ui": "npm run compile && node scripts/run-tests.js --ui",
+    "vsix": "vsce package",
     "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('.vscode-test',{recursive:true,force:true});\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.9.3",
-    "@types/vscode": "^1.120.0",
+    "@types/vscode": "1.120.0",
     "@vscode/test-electron": "^3.0.0",
-    "@vscode/vsce": "^3.9.2",
+    "@vscode/vsce": "^4.1.1",
     "esbuild": "^0.28.1",
     "eslint": "^10.5.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0"
+  },
+  "overrides": {
+    "@vscode/vsce": {
+      "minimatch": "^11.0.5"
+    }
   }
 }
