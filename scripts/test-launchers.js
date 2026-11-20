@@ -6,7 +6,8 @@ const path = require("node:path");
 const { test } = require("node:test");
 
 test("Bash launchers preserve CLI arguments and resolve symlinks", { skip: process.platform === "win32" }, (t) => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "vimcode-launcher-"));
+  // Relative symlinks resolve from the physical directory. macOS aliases /var to /private/var.
+  const directory = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), "vimcode-launcher-"));
   t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
   const bin = path.join(directory, "linked bin");
   const upstream = path.join(directory, "real bin");

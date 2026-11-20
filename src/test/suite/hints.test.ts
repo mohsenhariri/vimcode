@@ -1,5 +1,6 @@
 import * as assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as vscode from "vscode";
@@ -121,33 +122,43 @@ export const hintTests: readonly TestCase[] = [
   {
     name: "line hints preserve a preview tab and an edit cancels its pending label",
     async run() {
-      const directory = await mkdtemp(join(tmpdir(), "vimcode-preview-"));
+      const profile = process.env.VIMCODE_TEST_PROFILE;
+      const file = join(profile || tmpdir(), `vimcode-preview-${randomUUID()}.txt`);
+      await writeFile(file, "one\n  two\nthree", { flag: "wx" });
       try {
-        const file = join(directory, "preview.txt");
-        await writeFile(file, "one\n  two\nthree");
         const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
         const editor = await vscode.window.showTextDocument(document, { preview: true });
         const group = vscode.window.tabGroups.activeTabGroup;
         const tab = group.activeTab;
-        assert.ok(tab?.isPreview, "Expected a real preview tab before entering hint mode");
-        await vscode.commands.executeCommand(COMMANDS.enterHintMode);
-        await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "s" });
-        assert.deepEqual([editor.selection.active.line, editor.selection.active.character], [1, 2]);
-        assert.equal(group.activeTab, tab);
-        assert.ok(tab.isPreview, "Jumping must preserve preview state");
+        assert.ok(tab);
+        try {
+          assert.ok(tab.isPreview, "Expected a real preview tab before entering hint mode");
+          await vscode.commands.executeCommand(COMMANDS.enterHintMode);
+          await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "s" });
+          assert.deepEqual([editor.selection.active.line, editor.selection.active.character], [1, 2]);
+          assert.equal(group.activeTab, tab);
+          assert.ok(tab.isPreview, "Jumping must preserve preview state");
 
-        await vscode.commands.executeCommand(COMMANDS.enterHintMode);
-        await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), "text "));
-        await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
-        assert.equal(editor.selection.active.line, 1);
-        // Saving a dirty editor sends a document event with no content changes.
-        await vscode.commands.executeCommand(COMMANDS.enterHintMode);
-        await document.save();
-        await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
-        assert.equal(editor.selection.active.line, 0, "Saving the same text should preserve hints");
-        await vscode.window.tabGroups.close(tab);
+          await vscode.commands.executeCommand(COMMANDS.enterHintMode);
+          await editor.edit((edit) => edit.insert(new vscode.Position(0, 0), "text "));
+          await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
+          assert.equal(editor.selection.active.line, 1);
+          // Saving a dirty editor sends a document event with no content changes.
+          await vscode.commands.executeCommand(COMMANDS.enterHintMode);
+          await document.save();
+          await vscode.commands.executeCommand(COMMANDS.typeHintCharacter, { character: "a" });
+          assert.equal(editor.selection.active.line, 0, "Saving the same text should preserve hints");
+        } finally {
+          if (document.isDirty) {
+            await document.save();
+          }
+          await vscode.window.tabGroups.close(tab);
+        }
       } finally {
-        await rm(directory, { recursive: true, force: true });
+        // The runner removes its profile after VS Code releases its Windows directory handles.
+        if (!profile) {
+          await rm(file, { force: true });
+        }
       }
     }
   }
