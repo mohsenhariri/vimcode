@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/mohsenhariri/vimcode/issues"
   },
-  "homepage": "https://github.com/mohsenhariri/vimcode#readme",
+  "homepage": "https://mohsenhariri.github.io/vimcode/",
   "engines": {
     "vscode": "^1.120.0"
   },

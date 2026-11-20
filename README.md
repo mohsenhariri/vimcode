@@ -2,6 +2,8 @@
 
 Keyboard-first navigation for VS Code, inspired by [Vimium](https://github.com/philc/vimium). This extension adds visible hint labels in the active editor and a Vimium-style IDE hint mode for open editor tabs, Activity Bar entries, Explorer buttons, panels, terminals, and focused lists or trees.
 
+[VS Code extension](https://marketplace.visualstudio.com/items?itemName=harimo9.vimcode)
+
 ## Features
 
 - `Vimium: Show Editor Navigation Hints` overlays hint labels on visible editor lines.
